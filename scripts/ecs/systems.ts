@@ -1,0 +1,1 @@
+export type System<T> = (components: T) => void

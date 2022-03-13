@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "outDir": "./scar",
+        "target": "esnext",
+        "lib": [
+            "esnext"
+        ],
+        "moduleResolution": "node",
+        "types": [
+            "lua-types/5.3"
+        ],
+        "strict": true,
+        "rootDir": "scripts"
+    },
+    "tstl": {
+        "luaTarget": "5.3",
+        "sourceMapTraceback": false,
+        "noHeader": true,
+        "noImplicitSelf": true,
+        "luaBundle": "main.lua",
+        "luaBundleEntry": "scripts/main.ts"
+    },
+    "include": [
+        "scripts/**/*.ts",
+        "types/*.d.ts"
+    ]
+}

@@ -1,0 +1,11 @@
+{
+    "scripts": {
+        "build": "tstl",
+        "deploy": "node deploy.js",
+        "dev": "tstl --watch"
+    },
+    "devDependencies": {
+        "lua-types": "^2.11.0",
+        "typescript-to-lua": "^1.3.4"
+    }
+}
