@@ -9,11 +9,11 @@ declare type AIPlayer = {};
 declare type Modifier = {};
 declare type RaceBlueprint = {};
 declare type ScarMarker = {};
-declare type ScarPosition = {
+declare interface ScarPosition {
     x: number;
     y: number;
     z: number;
-};
+}
 declare type Squad = {};
 declare type AISquad = {};
 declare type AIEntity = {};

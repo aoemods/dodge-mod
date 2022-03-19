@@ -13,11 +13,10 @@ import { lifetimeSystem } from "../systems/lifetime"
 import { physicsSystem } from "../systems/physics"
 import { createTask } from "../core/tasks"
 import { PlayerComponent } from "../components/player"
-import { spawnEntity, } from "../core/util"
 import { newEntityId } from "../ecs/entity"
 import { RoundsComponent } from "../components/rounds"
 import { roundsSystem } from "../systems/rounds"
-import { round1, round2, round3, round4 } from "./rounds"
+import { getRounds } from "./rounds"
 
 export interface GameMode {
     onInit(): void
@@ -62,13 +61,8 @@ export class GameModeWarlock implements GameMode {
             state: "init",
             timeBetweenRounds: 5,
             remainingSteps: [],
-            rounds: [
-                round1(),
-                round2(),
-                round3(),
-                round4(),
-            ],
-            bounds: { min: [-14, -14], max: [14, 14] },
+            rounds: getRounds(),
+            bounds: { min: [-12, -12], max: [12, 12] },
         },
         collisions: {},
         lifetimes: {},

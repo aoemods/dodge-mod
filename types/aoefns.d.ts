@@ -12433,7 +12433,7 @@ declare function UI_CreateEntityKickerMessage(player: PlayerID, entity: EntityID
 /**
  * Creates an event cue without a callback (you won't know when it's clicked).
  */
-declare function UI_CreateEventCue(title: String, description: String, data_template: String, icon_path: String, sound_path: String, OPT_visibility: EventCueVisibility, OPT_lifetime: Real): any;
+declare function UI_CreateEventCue(title: String, description: String | null | undefined, data_template: String, icon_path: String, sound_path: String, OPT_visibility?: EventCueVisibility, OPT_lifetime?: Real): any;
 /**
  * Creates a custom event cue. The Lua function callback passed in takes an ID as an argument which can be used to clear the event cue with UI_ClearEventCueFromID.
  */

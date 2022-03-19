@@ -29,6 +29,8 @@ function startProcessSteps(components: RoundsSystemInputs) {
         components.rounds.currentTask = undefined
         if (components.rounds.remainingSteps.length === 0) {
             components.rounds.state = "finished"
+            Sound_Play2D("Conquest_enemy_eliminated")
+            UI_CreateEventCue(LOC(`Completed round ${components.rounds.currentRound + 1}`), undefined, "", "", "sfx_ui_event_queue_high_priority_play")
             return
         }
 
@@ -73,7 +75,7 @@ function startProcessSteps(components: RoundsSystemInputs) {
                 }
 
                 components.collisions[projectileEntityId] = {
-                    radius: 0.7,
+                    radius: 0.6,
                 }
 
                 components.lifetimes[projectileEntityId] = {
@@ -105,8 +107,21 @@ const civHeroBlueprints: Record<string, string> = {
     "abbasid": "unit_spearman_4_abb",
 }
 
+function playerHeroExists(playerEntityId: string, components: RoundsSystemInputs) {
+    return Object.entries(components.aoeEntities).some(([entId, aoeEnt]) =>
+        aoeEnt.syncMode === "slave" &&
+        entId in components.playerOwneds &&
+        components.playerOwneds[entId].owningPlayerId === playerEntityId
+    )
+}
+
 function createHeroes(components: RoundsSystemInputs) {
     for (const [playerEntityId, player] of Object.entries(components.players)) {
+        // Check if player hero already exists
+        if (playerHeroExists(playerEntityId, components)) {
+            continue
+        }
+
         const playerCiv = Player_GetRaceName(player.aoePlayer.id)
 
         const heroEntity = spawnEntity(
@@ -123,7 +138,7 @@ function createHeroes(components: RoundsSystemInputs) {
             syncMode: "slave",
         }
         components.collisions[entityId] = {
-            radius: 1,
+            radius: 0.6,
         }
         components.playerOwneds[entityId] = {
             owningPlayerId: playerEntityId,
@@ -137,6 +152,20 @@ function createHeroes(components: RoundsSystemInputs) {
 export const roundsSystem: System<RoundsSystemInputs> = (components: RoundsSystemInputs) => {
     const { rounds } = components
 
+    // Kill heroes that are out of bounds
+    for (const [entityId, aoeEntity] of Object.entries(components.aoeEntities)) {
+        const [x, y] = components.transforms[entityId].position
+        if (aoeEntity.syncMode === "slave") {
+            if (x < rounds.bounds.min[0] || x > rounds.bounds.max[0] ||
+                y < rounds.bounds.min[1] || y > rounds.bounds.max[1]) {
+                print("Killed because out of bounds")
+                components.lifetimes[entityId] = {
+                    remainingTime: 0
+                }
+            }
+        }
+    }
+
     if (rounds.state === "waiting") {
         return
     }
@@ -146,17 +175,22 @@ export const roundsSystem: System<RoundsSystemInputs> = (components: RoundsSyste
 
         print(`Waiting ${rounds.timeBetweenRounds} seconds for next round`)
 
+        createHeroes(components)
+
         rounds.currentTask = createTask({
             callback: () => {
                 rounds.state = "inProgress"
                 rounds.currentRound++
                 print(`Starting round ${rounds.currentRound}`)
 
+                print("Respawning heroes")
+
                 if (rounds.currentRound < rounds.rounds.length) {
                     rounds.remainingSteps = [...rounds.rounds[rounds.currentRound].steps]
                     startProcessSteps(components)
                 } else {
                     print("Game over!")
+                    UI_CreateEventCue(LOC(`Completed all rounds, the game is over`), undefined, "", "", "sfx_ui_event_queue_high_priority_play")
                 }
             },
             interval: rounds.timeBetweenRounds,
@@ -181,23 +215,12 @@ export const roundsSystem: System<RoundsSystemInputs> = (components: RoundsSyste
         }
     }
 
-    // Kill heroes that are out of bounds
-    for (const [entityId, aoeEntity] of Object.entries(components.aoeEntities)) {
-        const [x, y] = components.transforms[entityId].position
-        if (aoeEntity.syncMode === "slave") {
-            if (x < rounds.bounds.min[0] || x > rounds.bounds.max[0] ||
-                y < rounds.bounds.min[1] || y > rounds.bounds.max[1]) {
-                print("Killed because out of bounds")
-                components.lifetimes[entityId] = {
-                    remainingTime: 0
-                }
-            }
-        }
-    }
-
     // Restart game if no heroes alive
     if (Object.values(components.aoeEntities).filter(aoeEntity => aoeEntity.syncMode === "slave").length === 0) {
-        print("Game over, restarting...")
+        print("All heroes are dead, restarting...")
+
+        Sound_Play2D("mus_stinger_landmark_objective_complete_fail")
+        UI_CreateEventCue(LOC(`Failed on round ${components.rounds.currentRound + 1}, restarting from round 1...`), undefined, "", "", "sfx_ui_event_queue_high_priority_play")
 
         for (const entityId in components.aoeEntities) {
             components.lifetimes[entityId] = {
