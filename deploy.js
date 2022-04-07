@@ -9,7 +9,7 @@ const inFile = path.join(inPath, "main.lua")
 const inFileText = fs.readFileSync(inFile, "utf-8")
 const outFileText = inFileText.replaceAll("importScar", "import")
 
-const outFile = path.join(outPath, "toratest.scar")
+const outFile = path.join(outPath, "main.scar")
 console.log(inFile, "->", outFile)
 
 fs.writeFileSync(outFile, outFileText)

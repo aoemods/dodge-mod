@@ -1,3 +1,3 @@
 export type PlayerComponent = {
-    aoePlayer: PlayerID
+    aoePlayer: Player
 }

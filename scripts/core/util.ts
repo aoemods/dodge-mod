@@ -1,6 +1,6 @@
 import { Vector2 } from "./vector2"
 
-export function getSquadGroupEntity(squadGroup: number) {
+export function getSquadGroupEntity(squadGroup: SGroupID) {
     return Squad_EntityAt(SGroup_GetSpawnedSquadAt(squadGroup, 1), 0)
 }
 
@@ -9,7 +9,7 @@ export type SpawnEntityOptions = {
 }
 
 let nextEntityId = 0
-export function spawnEntity(playerOwner: PlayerID, position: Position, pbg: string, options?: SpawnEntityOptions) {
+export function spawnEntity(playerOwner: Player, position: Position, pbg: string, options?: SpawnEntityOptions) {
     let dummySquadBlueprint: SquadBlueprint = BP_GetSquadBlueprint(pbg)
 
     const squadGroup = SGroup_CreateIfNotFound(`sg_${nextEntityId++}`)
@@ -24,7 +24,7 @@ export function spawnEntity(playerOwner: PlayerID, position: Position, pbg: stri
     return getSquadGroupEntity(squadGroup)
 }
 
-export function vectorToPosition(v: Vector2, height?: number): ScarPosition {
+export function vectorToPosition(v: Vector2, height?: number): Position {
     const [x, y] = v
 
     let h = World_GetHeightAt(x, y)

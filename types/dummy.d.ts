@@ -1,1 +1,0 @@
-declare function importScar(path: string): void;
