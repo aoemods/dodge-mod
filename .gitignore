@@ -129,4 +129,5 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-scar/
+# tstl output
+scripts-generated/

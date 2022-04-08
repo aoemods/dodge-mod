@@ -1,4 +1,4 @@
-import { GameMode, GameModeWarlock } from "./game/gamemode"
+import { GameModeRounds } from "./game/gamemode"
 
 importScar("cardinal.scar")
 importScar("ScarUtil.scar")
@@ -8,7 +8,7 @@ Core_RegisterModule("Mod")
 
 g.Mod_OnInit = () => {
     print(`Creating game mode with ${Object.values(g.PLAYERS).length} players`)
-    const gameMode = new GameModeWarlock(g.PLAYERS as Player[])
+    const gameMode = new GameModeRounds(g.PLAYERS as Player[])
     print("Game mode components:")
     for (const [k, v] of Object.entries(gameMode.components)) {
         print(`## ${k}: ${v}`)

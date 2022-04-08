@@ -1,15 +1,24 @@
 const fs = require("fs")
 const path = require("path")
+require("dotenv").config()
 
-const inPath = "scar"
-const outPath = process.argv[2]
+const outPath = process.env["AOE4_SCAR_PATH"]
 
-const inFile = path.join(inPath, "main.lua")
+if (!outPath) {
+    console.error("Copy or rename the .env.example file to .env file and set its output path to where you want the generated script to be.")
+    process.exit(1)
+}
 
-const inFileText = fs.readFileSync(inFile, "utf-8")
+const inPath = path.join("scripts-generated", "main.lua")
+
+if (!fs.existsSync(inPath)) {
+    console.error(`Input path ${inPath} does not exist, maybe tstl did not run yet.`)
+    process.exit(2)
+}
+
+const inFileText = fs.readFileSync(inPath, "utf-8")
 const outFileText = inFileText.replaceAll("importScar", "import")
 
-const outFile = path.join(outPath, "main.scar")
-console.log(inFile, "->", outFile)
+console.log(inPath, "->", outPath)
 
-fs.writeFileSync(outFile, outFileText)
+fs.writeFileSync(outPath, outFileText)

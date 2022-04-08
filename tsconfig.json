@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "outDir": "./scar",
+        "outDir": "./scripts-generated",
         "target": "esnext",
         "lib": [
             "esnext"

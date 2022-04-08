@@ -1,12 +1,16 @@
 {
-    "name": "dodge-mod",
+    "name": "aoe4-typescript-template",
     "scripts": {
-        "build": "tstl",
-        "deploy": "node deploy.js",
-        "dev": "tstl --watch"
+        "start": "tstl && node deploy.js",
+        "dev": "tstl && run-p dev:*",
+        "dev:tstl": "tstl --watch",
+        "dev:deploy": "watch --interval 0.5 \"node deploy.js\" ./scripts-generated"
     },
     "devDependencies": {
-        "@aoemods/aoetypes": "file:../aoe-types/packages/aoetypes",
-        "typescript-to-lua": "^1.3.4"
+        "@aoemods/aoetypes": "^0.1.4",
+        "dotenv": "^16.0.0",
+        "npm-run-all": "^4.1.5",
+        "typescript-to-lua": "^1.4.2",
+        "watch": "^1.0.2"
     }
 }

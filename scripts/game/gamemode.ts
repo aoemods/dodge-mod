@@ -45,9 +45,7 @@ const gameSystem: System<GameSystemInputs> = (components: GameSystemInputs) => {
     entitySyncSystem(components)
 }
 
-
-
-export class GameModeWarlock implements GameMode {
+export class GameModeRounds implements GameMode {
     updateInterval = 0.125
     components: GameComponent = {
         gameState: {
