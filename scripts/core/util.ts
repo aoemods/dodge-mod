@@ -36,7 +36,26 @@ export function vector2ToPosition(v: Vector2, height?: number): Position {
     return World_Pos(x, h, y)
 }
 
+export function positionToVector2(position: Position): Vector2 {
+    return [position.x, position.z]
+}
+
+export function copyPositionToVector2(vector: Vector2, position: Position) {
+    vector[0] = position.x
+    vector[1] = position.z
+}
+
 export function vector3ToPosition(v: Vector3): Position {
     const [x, y, z] = v
     return World_Pos(x, y, z)
+}
+
+export function positionToVector3(position: Position): Vector3 {
+    return [position.x, position.y, position.z]
+}
+
+export function copyPositionToVector3(vector: Vector3, position: Position) {
+    vector[0] = position.x
+    vector[1] = position.y
+    vector[2] = position.z
 }

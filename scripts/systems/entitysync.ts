@@ -2,7 +2,7 @@ import { TransformComponent } from "../components/transform"
 import { EntityComponents } from "../ecs/components"
 import { System } from "../ecs/systems"
 import { AoeEntityComponent, EntitySyncProperty } from "../components/aoeentity"
-import { vector3ToPosition, vector2ToPosition } from "../core/util"
+import { vector3ToPosition, vector2ToPosition, copyPositionToVector3, copyPositionToVector2 } from "../core/util"
 
 export type EntitySyncSystemInputs = {
     aoeEntities: EntityComponents<AoeEntityComponent>
@@ -31,15 +31,12 @@ export const entitySyncSystem: System<EntitySyncSystemInputs> = (components: Ent
             case "slave":
                 if (syncPosition) {
                     const entityPosition = Entity_GetPosition(aoeEntity.entityId)
-                    transformComponent.position[0] = entityPosition.x
-                    transformComponent.position[1] = entityPosition.z
+                    copyPositionToVector2(transformComponent.position, entityPosition)
                 }
 
                 if (syncHeading) {
                     const entityHeading = Entity_GetHeading(aoeEntity.entityId)
-                    transformComponent.heading[0] = entityHeading.x
-                    transformComponent.heading[1] = entityHeading.y
-                    transformComponent.heading[2] = entityHeading.z
+                    copyPositionToVector3(transformComponent.heading, entityHeading)
                 }
                 break
         }

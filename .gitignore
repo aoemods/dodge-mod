@@ -131,6 +131,7 @@ dist
 
 # tstl output
 scripts-generated/
+assets/scenarios/multiplayer/100-rounds/100-rounds.scar
 
 # aoe4
 .aoe4/
