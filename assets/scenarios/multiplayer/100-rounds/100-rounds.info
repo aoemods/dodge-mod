@@ -162,6 +162,11 @@ HeaderInfo =
 	},
 	version = 3001,
 	visible_in_lobby = true,
+	win_condition = "00000000000000000000000000000000:385555344",
+	win_conditions =  
+	{
+		"00000000000000000000000000000000:385555344",
+	},
 	worldbp = "default",
 }
 

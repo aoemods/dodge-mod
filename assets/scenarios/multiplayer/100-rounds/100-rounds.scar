@@ -2528,6 +2528,13 @@ return {
  end,
 ["components.aoeentity"] = function(...) 
 local ____exports = {}
+____exports.EntitySyncProperty = EntitySyncProperty or ({})
+____exports.EntitySyncProperty.None = 0
+____exports.EntitySyncProperty[____exports.EntitySyncProperty.None] = "None"
+____exports.EntitySyncProperty.Position = 1
+____exports.EntitySyncProperty[____exports.EntitySyncProperty.Position] = "Position"
+____exports.EntitySyncProperty.Heading = 2
+____exports.EntitySyncProperty[____exports.EntitySyncProperty.Heading] = "Heading"
 return ____exports
  end,
 ["components.collision"] = function(...) 
@@ -2571,6 +2578,32 @@ return ____exports
  end,
 ["components.rigidbody"] = function(...) 
 local ____exports = {}
+return ____exports
+ end,
+["core.vector3"] = function(...) 
+local ____exports = {}
+function ____exports.add(a, b)
+    return {a[1] + b[1], a[2] + b[2], a[3] + b[3]}
+end
+function ____exports.addInline(a, b)
+    a[1] = a[1] + b[1]
+    a[2] = a[2] + b[2]
+    a[3] = a[3] + b[3]
+end
+function ____exports.scale(a, s)
+    return {a[1] * s, a[2] * s, a[3] * s}
+end
+function ____exports.scaleInline(a, s)
+    a[1] = a[1] * s
+    a[2] = a[2] * s
+    a[3] = a[3] * s
+end
+function ____exports.distanceSquared(a, b)
+    local dx = a[1] - b[1]
+    local dy = a[2] - b[2]
+    local dz = a[3] - b[3]
+    return dx * dx + dy * dy + dz * dz
+end
 return ____exports
  end,
 ["components.transform"] = function(...) 
@@ -2648,7 +2681,7 @@ function ____exports.spawnEntity(playerOwner, position, pbg, options)
     end
     return ____exports.getSquadGroupEntity(squadGroup)
 end
-function ____exports.vectorToPosition(v, height)
+function ____exports.vector2ToPosition(v, height)
     local x, y = table.unpack(v)
     local h = World_GetHeightAt(x, y)
     if height then
@@ -2656,14 +2689,21 @@ function ____exports.vectorToPosition(v, height)
     end
     return World_Pos(x, h, y)
 end
+function ____exports.vector3ToPosition(v)
+    local x, y, z = table.unpack(v)
+    return World_Pos(x, y, z)
+end
 return ____exports
  end,
 ["systems.entitysync"] = function(...) 
 local ____lualib = require("lualib_bundle")
 local __TS__ObjectEntries = ____lualib.__TS__ObjectEntries
 local ____exports = {}
+local ____aoeentity = require("components.aoeentity")
+local EntitySyncProperty = ____aoeentity.EntitySyncProperty
 local ____util = require("core.util")
-local vectorToPosition = ____util.vectorToPosition
+local vector3ToPosition = ____util.vector3ToPosition
+local vector2ToPosition = ____util.vector2ToPosition
 ____exports.entitySyncSystem = function(components)
     local aoeEntities = components.aoeEntities
     local transforms = components.transforms
@@ -2671,22 +2711,40 @@ ____exports.entitySyncSystem = function(components)
         local entityId = ____value[1]
         local aoeEntity = ____value[2]
         local transformComponent = transforms[entityId]
+        local syncPosition = not aoeEntity.syncProperties or aoeEntity.syncProperties & EntitySyncProperty.Position == EntitySyncProperty.Position
+        local syncHeading = not aoeEntity.syncProperties or aoeEntity.syncProperties & EntitySyncProperty.Heading == EntitySyncProperty.Heading
         repeat
             local ____switch4 = aoeEntity.syncMode
-            local entityPosition
             local ____cond4 = ____switch4 == "master"
             if ____cond4 then
-                Entity_SetPosition(
-                    aoeEntity.entityId,
-                    vectorToPosition(transformComponent.position, aoeEntity.height)
-                )
+                if syncPosition then
+                    Entity_SetPosition(
+                        aoeEntity.entityId,
+                        vector2ToPosition(transformComponent.position, aoeEntity.height)
+                    )
+                end
+                if syncHeading then
+                    Entity_SetHeading(
+                        aoeEntity.entityId,
+                        vector3ToPosition(transformComponent.heading),
+                        true
+                    )
+                end
                 break
             end
             ____cond4 = ____cond4 or ____switch4 == "slave"
             if ____cond4 then
-                entityPosition = Entity_GetPosition(aoeEntity.entityId)
-                transformComponent.position[1] = entityPosition.x
-                transformComponent.position[2] = entityPosition.z
+                if syncPosition then
+                    local entityPosition = Entity_GetPosition(aoeEntity.entityId)
+                    transformComponent.position[1] = entityPosition.x
+                    transformComponent.position[2] = entityPosition.z
+                end
+                if syncHeading then
+                    local entityHeading = Entity_GetHeading(aoeEntity.entityId)
+                    transformComponent.heading[1] = entityHeading.x
+                    transformComponent.heading[2] = entityHeading.y
+                    transformComponent.heading[3] = entityHeading.z
+                end
                 break
             end
         until true
@@ -2816,7 +2874,7 @@ local __TS__ArrayFilter = ____lualib.__TS__ArrayFilter
 local ____exports = {}
 local ____util = require("core.util")
 local spawnEntity = ____util.spawnEntity
-local vectorToPosition = ____util.vectorToPosition
+local vector2ToPosition = ____util.vector2ToPosition
 local ____tasks = require("core.tasks")
 local createTask = ____tasks.createTask
 local stopTask = ____tasks.stopTask
@@ -2858,7 +2916,7 @@ local function startProcessSteps(components)
                 projectileEntityId = newEntityId()
                 projectileEntity = spawnEntity(
                     player.aoePlayer,
-                    vectorToPosition(step.position),
+                    vector2ToPosition(step.position),
                     "gaia_herdable_sheep",
                     {unselectable = true}
                 )
@@ -2867,7 +2925,10 @@ local function startProcessSteps(components)
                 components.playerOwneds[projectileEntityId] = {owningPlayerId = playerEntityId}
                 components.collisions[projectileEntityId] = {radius = 0.6}
                 components.lifetimes[projectileEntityId] = {remainingTime = 10}
-                components.transforms[projectileEntityId] = {position = {table.unpack(step.position)}}
+                components.transforms[projectileEntityId] = {
+                    position = {table.unpack(step.position)},
+                    heading = {step.velocity[1], 0, step.velocity[2]}
+                }
                 processNextStep()
                 break
             end
@@ -2923,7 +2984,7 @@ local function createHeroes(components)
             components.aoeEntities[entityId] = {entityId = heroEntity, syncMode = "slave"}
             components.collisions[entityId] = {radius = 0.6}
             components.playerOwneds[entityId] = {owningPlayerId = playerEntityId}
-            components.transforms[entityId] = {position = {0, 0}}
+            components.transforms[entityId] = {position = {0, 0}, heading = {1, 0, 0}}
         end
         ::__continue10::
     end
