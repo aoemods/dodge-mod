@@ -2,7 +2,7 @@ import { TransformComponent } from "../components/transform"
 import { EntityComponents, SingletonComponent } from "../ecs/components"
 import { System } from "../ecs/systems"
 import { AoeEntityComponent } from "../components/aoeentity"
-import { spawnEntity, vectorToPosition } from "../core/util"
+import { spawnEntity, vector2ToPosition } from "../core/util"
 import { RoundsComponent } from "../components/rounds"
 import { createTask, stopTask } from "../core/tasks"
 import { newEntityId } from "../ecs/entity"
@@ -53,7 +53,7 @@ function startProcessSteps(components: RoundsSystemInputs) {
 
                 const projectileEntity = spawnEntity(
                     player.aoePlayer,
-                    vectorToPosition(step.position),
+                    vector2ToPosition(step.position),
                     "gaia_herdable_sheep",
                     {
                         unselectable: true,
@@ -83,7 +83,8 @@ function startProcessSteps(components: RoundsSystemInputs) {
                 }
 
                 components.transforms[projectileEntityId] = {
-                    position: [...step.position]
+                    position: [...step.position],
+                    heading: [step.velocity[0], 0, step.velocity[1]],
                 }
 
                 processNextStep()
@@ -145,6 +146,7 @@ function createHeroes(components: RoundsSystemInputs) {
         }
         components.transforms[entityId] = {
             position: [0, 0],
+            heading: [1, 0, 0],
         }
     }
 }

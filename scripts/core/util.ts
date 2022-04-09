@@ -1,4 +1,5 @@
 import { Vector2 } from "./vector2"
+import { Vector3 } from "./vector3"
 
 export function getSquadGroupEntity(squadGroup: SGroupID) {
     return Squad_EntityAt(SGroup_GetSpawnedSquadAt(squadGroup, 1), 0)
@@ -24,7 +25,7 @@ export function spawnEntity(playerOwner: Player, position: Position, pbg: string
     return getSquadGroupEntity(squadGroup)
 }
 
-export function vectorToPosition(v: Vector2, height?: number): Position {
+export function vector2ToPosition(v: Vector2, height?: number): Position {
     const [x, y] = v
 
     let h = World_GetHeightAt(x, y)
@@ -33,4 +34,9 @@ export function vectorToPosition(v: Vector2, height?: number): Position {
     }
 
     return World_Pos(x, h, y)
+}
+
+export function vector3ToPosition(v: Vector3): Position {
+    const [x, y, z] = v
+    return World_Pos(x, y, z)
 }
