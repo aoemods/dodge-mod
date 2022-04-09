@@ -131,3 +131,8 @@ dist
 
 # tstl output
 scripts-generated/
+
+# aoe4
+.aoe4/
+cache/
+archives/

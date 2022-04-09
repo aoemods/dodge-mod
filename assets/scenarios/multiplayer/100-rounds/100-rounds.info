@@ -1,0 +1,167 @@
+HeaderInfo =  
+{
+	ScenarioDescription = "Dodge for 100 rounds to win.",
+	ScenarioDescriptionlong = "Dodge for 100 rounds to win. Originally a Warcraft 3 mod.",
+	mapsize =  
+	{
+		64,
+		64,
+	},
+	point_positions =  
+	{
+		 
+		{
+			ebp_name = "starting_position",
+			owner_id = 1000,
+			x = 0.00000,
+			y = 0.00000,
+		},
+		 
+		{
+			ebp_name = "starting_position",
+			owner_id = 1001,
+			x = 0.00000,
+			y = 5.00000,
+		},
+		 
+		{
+			ebp_name = "starting_position",
+			owner_id = 1002,
+			x = 0.00000,
+			y = 10.00000,
+		},
+		 
+		{
+			ebp_name = "starting_position",
+			owner_id = 1003,
+			x = 0.00000,
+			y = 15.00000,
+		},
+		 
+		{
+			ebp_name = "starting_position",
+			owner_id = 1004,
+			x = 0.00000,
+			y = 20.00000,
+		},
+		 
+		{
+			ebp_name = "starting_position",
+			owner_id = 1005,
+			x = 0.00000,
+			y = 25.00000,
+		},
+		 
+		{
+			ebp_name = "starting_position",
+			owner_id = 1006,
+			x = 0.00000,
+			y = -5.00000,
+		},
+		 
+		{
+			ebp_name = "starting_position",
+			owner_id = 1007,
+			x = 0.00000,
+			y = -10.00000,
+		},
+	},
+	scenario_type = 1,
+	scenarioabbrname = "100 Rounds",
+	scenarioname = "100 Rounds",
+	slots =  
+	{
+		 
+		{
+			flags = 4294967231,
+			status = 0,
+			team = 0,
+		},
+		 
+		{
+			flags = 4294967231,
+			status = 0,
+			team = 0,
+		},
+		 
+		{
+			flags = 4294967231,
+			status = 0,
+			team = 0,
+		},
+		 
+		{
+			flags = 4294967231,
+			status = 0,
+			team = 0,
+		},
+		 
+		{
+			flags = 4294967231,
+			status = 0,
+			team = 0,
+		},
+		 
+		{
+			flags = 4294967231,
+			status = 0,
+			team = 0,
+		},
+		 
+		{
+			flags = 4294967231,
+			status = 0,
+			team = 0,
+		},
+		 
+		{
+			flags = 4294967231,
+			status = 0,
+			team = 0,
+		},
+		 
+		{
+			status = 1,
+			team = 10001,
+		},
+		 
+		{
+			status = 1,
+			team = 10001,
+		},
+		 
+		{
+			status = 1,
+			team = 10001,
+		},
+		 
+		{
+			status = 1,
+			team = 10001,
+		},
+		 
+		{
+			status = 1,
+			team = 10001,
+		},
+		 
+		{
+			status = 1,
+			team = 10001,
+		},
+		 
+		{
+			status = 1,
+			team = 10001,
+		},
+		 
+		{
+			status = 1,
+			team = 10001,
+		},
+	},
+	version = 3001,
+	visible_in_lobby = true,
+	worldbp = "default",
+}
+

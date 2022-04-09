@@ -1,5 +1,5 @@
 {
-    "name": "dodge-mod",
+    "name": "100-rounds",
     "scripts": {
         "start": "tstl && node deploy.js",
         "dev": "tstl && run-p dev:*",

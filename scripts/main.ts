@@ -1,12 +1,14 @@
 import { GameModeRounds } from "./game/gamemode"
 
-importScar("cardinal.scar")
-importScar("ScarUtil.scar")
+print("Loading script")
 
+importScar("MissionOMatic/MissionOMatic.scar")
+
+// We need to define global functions which MissionOMatic will call.
+// For that we can set variables on globalThis.
 const g = globalThis as any
-Core_RegisterModule("Mod")
 
-g.Mod_OnInit = () => {
+g.Mission_Start = () => {
     print(`Creating game mode with ${Object.values(g.PLAYERS).length} players`)
     const gameMode = new GameModeRounds(g.PLAYERS as Player[])
     print("Game mode components:")
@@ -15,3 +17,11 @@ g.Mod_OnInit = () => {
     }
     gameMode.onInit()
 }
+
+// Without this the game will crash as MissionOMatic tries to call it
+g.GetRecipe = () => {
+    print("GetRecipe() called")
+    return {}
+}
+
+print("Script loaded")

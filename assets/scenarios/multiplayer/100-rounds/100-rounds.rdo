@@ -1,0 +1,21 @@
+<DataWarehouse>
+	<!--PrecacheList/-->
+	<DataObject Name="" Type="PrecacheList" Id="10064708660572816447">
+		<DataProperty Name="m_precacheItems" Type="Object">
+			<DataValue Name="SquadPrecacheItem">12463700604374167888</DataValue>
+			<!--PrecacheList/SquadPrecacheItem/-->
+			<DataObject Name="" Type="SquadPrecacheItem" Id="12463700604374167888" OwnerId="10064708660572816447">
+				<DataProperty Name="#BaseTypes" Type="String" Value="IPrecacheItem#0|"/>
+				<DataProperty Name="m_blueprint" Type="Object">
+					<DataValue Name="ReflectPBG_SquadProperties">11935085547265072194</DataValue>
+					<!--PrecacheList/SquadPrecacheItem/ReflectPBG_SquadProperties/-->
+					<DataObject Name="" Type="ReflectPBG_SquadProperties" Id="11935085547265072194" OwnerId="12463700604374167888">
+						<DataProperty Name="#BaseTypes" Type="String" Value="PropertyBagGroupReflectReference#0|Provider_PropertyBagGroup#0|"/>
+						<DataProperty Name="m_fileName" Type="String" Value="gaia_herdable_sheep"/>
+					</DataObject>
+				</DataProperty>
+			</DataObject>
+		</DataProperty>
+	</DataObject>
+</DataWarehouse>
+

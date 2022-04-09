@@ -2,12 +2,7 @@ const fs = require("fs")
 const path = require("path")
 require("dotenv").config()
 
-const outPath = process.env["AOE4_SCAR_PATH"]
-
-if (!outPath) {
-    console.error("Copy or rename the .env.example file to .env file and set its output path to where you want the generated script to be.")
-    process.exit(1)
-}
+const outPath = path.join("assets", "scenarios", "multiplayer", "100-rounds", "100-rounds.scar")
 
 const inPath = path.join("scripts-generated", "main.lua")
 
