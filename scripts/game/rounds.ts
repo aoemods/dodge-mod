@@ -1,49 +1,165 @@
-import { Round, RoundBuilder } from "../components/rounds"
+import { Round, RoundRunProps } from "../components/rounds"
+import { pbgs } from "../constants"
 import { PRng } from "../core/prng"
-import { randomInt } from "../core/util"
+import { createTask } from "../core/tasks"
+import { randomInt, spawnEntity, vector2ToPosition } from "../core/util"
 import { Vector2 } from "../core/vector2"
+import * as v2 from "../core/vector2"
+import { newEntityId } from "../ecs/entity"
+import { RoundsSystemInputs } from "../systems/rounds"
 
 const velocityNormalPx: Vector2 = [1, 0]
 const velocityNormalNx: Vector2 = [-1, 0]
 const velocityNormalPy: Vector2 = [0, 1]
 const velocityNormalNy: Vector2 = [0, -1]
 
-function addSharedPostRound(builder: RoundBuilder) {
-    builder.wait(10)
+export enum ProjectileType {
+    Sheep,
+    Wolf,
+    Boar,
+    Deer,
 }
 
-export function round1(): Round {
-    const builder = new RoundBuilder()
+export type ProjectileTypeData = {
+    pbg: string
+    speed: number
+}
 
-    builder.sheep([25, 0], velocityNormalNx)
-    builder.wait(1.5)
-    builder.sheep([25, 0], velocityNormalNx)
-    builder.wait(1.5)
-    builder.sheep([25, 10], velocityNormalNx)
-    builder.wait(1.5)
-    builder.sheep([25, -10], velocityNormalNx)
-    builder.wait(1.5)
-    builder.sheep([25, -7], velocityNormalNx)
-    builder.wait(1.5)
-    builder.sheep([25, 7], velocityNormalNx)
-    builder.wait(1.5)
-    builder.sheep([25, 3], velocityNormalNx)
-    builder.wait(1.5)
-    builder.sheep([25, -3], velocityNormalNx)
-    builder.wait(1.5)
-    builder.sheep([25, 12], velocityNormalNx)
-    builder.wait(1.5)
-    builder.sheep([25, -11], velocityNormalNx)
+export const projectileTypeData: Record<ProjectileType, ProjectileTypeData> = {
+    [ProjectileType.Sheep]: { pbg: pbgs.sheep, speed: 4 },
+    [ProjectileType.Deer]: { pbg: pbgs.deer, speed: 6 },
+    [ProjectileType.Wolf]: { pbg: pbgs.wolf, speed: 4 },
+    [ProjectileType.Boar]: { pbg: pbgs.boar, speed: 2 },
+}
 
-    addSharedPostRound(builder)
+/**
+ * @noSelf
+ * Should be a type, but tstl seems to generate the wrong code.
+*/
+export interface RoundFunctions {
+    wait: (time: number) => Promise<void>
+    sheep: (position: Vector2, direction: Vector2) => void
+    wolf: (position: Vector2, direction: Vector2) => void
+    deer: (position: Vector2, direction: Vector2) => void
+    boar: (position: Vector2, direction: Vector2) => void
+}
+
+export function useRoundFunctions(props: RoundRunProps, components: RoundsSystemInputs): RoundFunctions {
+    async function wait(time: number): Promise<void> {
+        return new Promise((resolve, reject) => {
+            createTask({
+                callback: () => {
+                    if (props.stopped) {
+                        reject("Round stopped")
+                    } else {
+                        resolve()
+                    }
+                },
+                interval: time,
+            })
+        })
+    }
+
+    function spawnProjectile(position: Vector2, velocity: Vector2, pbg: string) {
+        const playerEntityId = Object.keys(components.players)[0]
+        const player = components.players[playerEntityId]
+
+        const projectileEntityId = newEntityId()
+
+        const projectileEntity = spawnEntity(
+            player.aoePlayer,
+            vector2ToPosition(position),
+            pbg,
+            {
+                unselectable: true,
+            }
+        )
+
+        components.aoeEntities[projectileEntityId] = {
+            entityId: projectileEntity,
+            syncMode: "master",
+        }
+
+        components.rigidBodies[projectileEntityId] = {
+            velocity: velocity,
+            force: [0, 0],
+        }
+
+        components.playerOwneds[projectileEntityId] = {
+            owningPlayerId: playerEntityId,
+        }
+
+        components.collisions[projectileEntityId] = {
+            radius: 0.6,
+        }
+
+        components.lifetimes[projectileEntityId] = {
+            remainingTime: 20
+        }
+
+        components.transforms[projectileEntityId] = {
+            position: [...position],
+            heading: [velocity[0], 0, velocity[1]],
+        }
+    }
+
+    function projectile(type: ProjectileType, position: Vector2, direction: Vector2) {
+        const { pbg, speed } = projectileTypeData[type]
+        const velocity = v2.scale(direction, speed)
+        spawnProjectile(position, velocity, pbg)
+    }
+
+    function sheep(position: Vector2, direction: Vector2) {
+        projectile(ProjectileType.Sheep, position, direction)
+    }
+
+    function wolf(position: Vector2, direction: Vector2) {
+        projectile(ProjectileType.Wolf, position, direction)
+    }
+
+    function deer(position: Vector2, direction: Vector2) {
+        projectile(ProjectileType.Deer, position, direction)
+    }
+
+    function boar(position: Vector2, direction: Vector2) {
+        projectile(ProjectileType.Boar, position, direction)
+    }
 
     return {
-        steps: builder.steps
+        wait,
+        sheep,
+        wolf,
+        deer,
+        boar,
     }
 }
 
-export function round2(): Round {
-    const builder = new RoundBuilder()
+export async function round1(roundFunctions: RoundFunctions) {
+    const { wait, sheep } = roundFunctions
+
+    sheep([25, 0], velocityNormalNx)
+    await wait(1.5)
+    sheep([25, 0], velocityNormalNx)
+    await wait(1.5)
+    sheep([25, 10], velocityNormalNx)
+    await wait(1.5)
+    sheep([25, -10], velocityNormalNx)
+    await wait(1.5)
+    sheep([25, -7], velocityNormalNx)
+    await wait(1.5)
+    sheep([25, 7], velocityNormalNx)
+    await wait(1.5)
+    sheep([25, 3], velocityNormalNx)
+    await wait(1.5)
+    sheep([25, -3], velocityNormalNx)
+    await wait(1.5)
+    sheep([25, 12], velocityNormalNx)
+    await wait(1.5)
+    sheep([25, -11], velocityNormalNx)
+}
+
+export async function round2(roundFunctions: RoundFunctions) {
+    const { wait, sheep } = roundFunctions
 
     const seq = [
         -10, 8, -8, 2, -4, 12, 15, 9, -3, -1,
@@ -52,26 +168,20 @@ export function round2(): Round {
     ]
 
     for (let i = 0; i < seq.length; i++) {
-        builder.sheep([-25, seq[i]], velocityNormalPx)
-        builder.wait(0.7)
+        sheep([-25, seq[i]], velocityNormalPx)
+        await wait(0.7)
     }
 
-    builder.wait(5)
+    await wait(5)
 
     for (let i = 0; i < seq.length; i++) {
-        builder.sheep([seq[i], 25], velocityNormalNy)
-        builder.wait(0.7)
-    }
-
-    addSharedPostRound(builder)
-
-    return {
-        steps: builder.steps
+        sheep([seq[i], 25], velocityNormalNy)
+        await wait(0.7)
     }
 }
 
-export function round3(): Round {
-    const builder = new RoundBuilder()
+export async function round3(roundFunctions: RoundFunctions) {
+    const { wait, sheep } = roundFunctions
 
     const seq = [
         -2, 10, 2, 1, -4, -5, 4, -12, 12, 0,
@@ -80,335 +190,258 @@ export function round3(): Round {
     ]
 
     for (let i = 0; i < seq.length; i++) {
-        builder.sheep([25, seq[i]], velocityNormalNx)
-        builder.wait(0.3)
+        sheep([25, seq[i]], velocityNormalNx)
+        await wait(0.3)
     }
 
-    builder.wait(4)
+    await wait(4)
 
     for (let i = 0; i < seq.length; i++) {
-        builder.sheep([seq[i], -25], velocityNormalPy)
-        builder.wait(0.3)
-    }
-
-    addSharedPostRound(builder)
-
-    return {
-        steps: builder.steps
+        sheep([seq[i], -25], velocityNormalPy)
+        await wait(0.3)
     }
 }
 
-export function round4(): Round {
-    const builder = new RoundBuilder()
+export async function round4(roundFunctions: RoundFunctions) {
+    const { wait, sheep } = roundFunctions
 
     const prng = PRng.new(4)
 
     for (let i = 0; i < 20; i++) {
-        builder.sheep([randomInt(prng, -12, 12), -25], velocityNormalPy)
-        builder.wait(0.5)
-        builder.sheep([25, randomInt(prng, -12, 12)], velocityNormalNx)
-        builder.wait(0.5)
+        sheep([randomInt(prng, -12, 12), -25], velocityNormalPy)
+        await wait(0.5)
+        sheep([25, randomInt(prng, -12, 12)], velocityNormalNx)
+        await wait(0.5)
     }
 
-    builder.wait(10)
+    await wait(10)
 
     for (let i = 0; i < 20; i++) {
-        builder.sheep([randomInt(prng, -12, 12), 25], velocityNormalNy)
-        builder.wait(0.5)
-        builder.sheep([25, randomInt(prng, -12, 12)], velocityNormalNx)
-        builder.wait(0.5)
-    }
-
-    addSharedPostRound(builder)
-
-    return {
-        steps: builder.steps
+        sheep([randomInt(prng, -12, 12), 25], velocityNormalNy)
+        await wait(0.5)
+        sheep([25, randomInt(prng, -12, 12)], velocityNormalNx)
+        await wait(0.5)
     }
 }
 
-export function round5(): Round {
-    const builder = new RoundBuilder()
+export async function round5(roundFunctions: RoundFunctions) {
+    const { wait, sheep } = roundFunctions
 
     const prng = PRng.new(5)
 
     for (let i = 0; i < 35; i++) {
-        builder.sheep([randomInt(prng, -12, 12), 25], velocityNormalNy)
-        builder.sheep([25, randomInt(prng, -12, 12)], velocityNormalNx)
-        builder.wait(0.8)
+        sheep([randomInt(prng, -12, 12), 25], velocityNormalNy)
+        sheep([25, randomInt(prng, -12, 12)], velocityNormalNx)
+        await wait(0.8)
     }
 
-    builder.wait(10)
+    await wait(10)
 
     for (let i = 0; i < 35; i++) {
-        builder.sheep([randomInt(prng, -12, 12), -25], velocityNormalPy)
-        builder.sheep([25, randomInt(prng, -12, 12)], velocityNormalNx)
-        builder.wait(0.8)
-    }
-
-    addSharedPostRound(builder)
-
-    return {
-        steps: builder.steps
+        sheep([randomInt(prng, -12, 12), -25], velocityNormalPy)
+        sheep([25, randomInt(prng, -12, 12)], velocityNormalNx)
+        await wait(0.8)
     }
 }
 
-export function round6(): Round {
-    const builder = new RoundBuilder()
+export async function round6(roundFunctions: RoundFunctions) {
+    const { wait, sheep } = roundFunctions
 
     const prng = PRng.new(6)
 
     for (let i = 0; i < 15; i++) {
         const center = randomInt(prng, -12, 12)
         for (let j = -3; j <= 3; j++) {
-            builder.sheep([center + j, 25], velocityNormalNy)
+            sheep([center + j, 25], velocityNormalNy)
         }
-        builder.wait(1.5)
+        await wait(1.5)
     }
 
-    builder.wait(10)
+    await wait(10)
 
     for (let i = 0; i < 15; i++) {
         const center = randomInt(prng, -12, 12)
         for (let j = -5; j <= 5; j++) {
-            builder.sheep([center + j, 25], velocityNormalNy)
+            sheep([center + j, 25], velocityNormalNy)
         }
-        builder.wait(2)
-    }
-
-    addSharedPostRound(builder)
-
-    return {
-        steps: builder.steps
+        await wait(2)
     }
 }
 
-export function round7(): Round {
-    const builder = new RoundBuilder()
+export async function round7(roundFunctions: RoundFunctions) {
+    const { wait, sheep } = roundFunctions
 
     const prng = PRng.new(7)
 
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 20; i++) {
         const center = randomInt(prng, -12, 12)
         for (let j = -1; j <= 1; j++) {
-            builder.sheep([center + j, 25], velocityNormalNy)
+            sheep([center + j, 25], velocityNormalNy)
         }
-        builder.wait(0.5)
+        await wait(0.5)
     }
 
-    builder.wait(10)
+    await wait(10)
 
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 20; i++) {
         const center = randomInt(prng, -12, 12)
         for (let j = -1; j <= 1; j++) {
-            builder.sheep([25, center + j], velocityNormalNx)
+            sheep([25, center + j], velocityNormalNx)
         }
-        builder.sheep([25, randomInt(prng, -12, 12)], velocityNormalNx)
-        builder.wait(0.5)
-    }
-
-    addSharedPostRound(builder)
-
-    return {
-        steps: builder.steps
+        sheep([25, randomInt(prng, -12, 12)], velocityNormalNx)
+        await wait(0.5)
     }
 }
 
-export function round8(): Round {
-    const builder = new RoundBuilder()
+export async function round8(roundFunctions: RoundFunctions) {
+    const { wait, sheep } = roundFunctions
 
     const prng = PRng.new(8)
 
-    for (let i = 0; i < 35; i++) {
-        builder.sheep([randomInt(prng, -12, 12), -25], velocityNormalPy)
-        builder.sheep([randomInt(prng, -12, 12), 25], velocityNormalNy)
-        builder.sheep([25, randomInt(prng, -12, 12)], velocityNormalNx)
-        builder.sheep([-25, randomInt(prng, -12, 12)], velocityNormalPx)
-        builder.wait(1.2)
-    }
-
-    addSharedPostRound(builder)
-
-    return {
-        steps: builder.steps
+    for (let i = 0; i < 30; i++) {
+        sheep([randomInt(prng, -12, 12), -25], velocityNormalPy)
+        sheep([randomInt(prng, -12, 12), 25], velocityNormalNy)
+        sheep([25, randomInt(prng, -12, 12)], velocityNormalNx)
+        sheep([-25, randomInt(prng, -12, 12)], velocityNormalPx)
+        await wait(1.2)
     }
 }
 
-export function round9(): Round {
-    const builder = new RoundBuilder()
+export async function round9(roundFunctions: RoundFunctions) {
+    const { wait, sheep } = roundFunctions
 
     const prng = PRng.new(9)
 
     for (let i = 0; i < 15; i++) {
         const center = randomInt(prng, -12, 12)
         for (let j = -5; j <= 5; j++) {
-            builder.sheep([center + j, 25], velocityNormalNy)
+            sheep([center + j, 25], velocityNormalNy)
         }
 
         for (let j = 0; j < 2; j++) {
-            builder.sheep([-25, randomInt(prng, -12, 12)], velocityNormalPx)
+            sheep([-25, randomInt(prng, -12, 12)], velocityNormalPx)
         }
 
-        builder.wait(2)
-    }
-
-    builder.wait(10)
-
-    for (let i = 0; i < 15; i++) {
-        const center = randomInt(prng, -12, 12)
-        for (let j = -5; j <= 5; j++) {
-            builder.sheep([center + j, -25], velocityNormalPy)
-        }
-
-        for (let j = 0; j < 3; j++) {
-            builder.sheep([25, randomInt(prng, -12, 12)], velocityNormalNx)
-        }
-
-        builder.wait(1.5)
-    }
-
-    addSharedPostRound(builder)
-
-    return {
-        steps: builder.steps
+        await wait(2)
     }
 }
 
 // TODO: round10... bossround
 
-export function round11(): Round {
-    const builder = new RoundBuilder()
+export async function round11(roundFunctions: RoundFunctions) {
+    const { wait, sheep, deer } = roundFunctions
 
     const prng = PRng.new(11)
 
     for (let i = 0; i < 16; i++) {
-        builder.deer([randomInt(prng, -12, 12), -25], velocityNormalPy)
-        builder.wait(0.5)
-        builder.deer([25, randomInt(prng, -12, 12)], velocityNormalNx)
-        builder.wait(0.5)
+        deer([randomInt(prng, -12, 12), -25], velocityNormalPy)
+        await wait(0.5)
+        deer([25, randomInt(prng, -12, 12)], velocityNormalNx)
+        await wait(0.5)
     }
 
-    builder.wait(10)
+    await wait(10)
 
     for (let i = 0; i < 16; i++) {
-        builder.sheep([randomInt(prng, -12, 12), 25], velocityNormalNy)
-        builder.sheep([randomInt(prng, -12, 12), 25], velocityNormalNy)
-        builder.wait(0.5)
-        builder.deer([25, randomInt(prng, -12, 12)], velocityNormalNx)
-        builder.sheep([randomInt(prng, -12, 12), 25], velocityNormalNy)
-        builder.wait(0.5)
-    }
-
-    addSharedPostRound(builder)
-
-    return {
-        steps: builder.steps
+        sheep([randomInt(prng, -12, 12), 25], velocityNormalNy)
+        sheep([randomInt(prng, -12, 12), 25], velocityNormalNy)
+        await wait(0.5)
+        deer([25, randomInt(prng, -12, 12)], velocityNormalNx)
+        sheep([randomInt(prng, -12, 12), 25], velocityNormalNy)
+        await wait(0.5)
     }
 }
 
-export function round12(): Round {
-    const builder = new RoundBuilder()
+export async function round12(roundFunctions: RoundFunctions) {
+    const { wait, sheep, deer } = roundFunctions
 
     const prng = PRng.new(12)
 
     for (let i = 0; i < 12; i++) {
-        builder.deer([randomInt(prng, -12, 12), -25], velocityNormalPy)
-        builder.deer([randomInt(prng, -12, 12), 25], velocityNormalNy)
-        builder.wait(0.5)
-        builder.deer([25, randomInt(prng, -12, 12)], velocityNormalNx)
-        builder.sheep([25, randomInt(prng, -12, 12)], velocityNormalNx)
-        builder.wait(0.5)
+        deer([randomInt(prng, -12, 12), -25], velocityNormalPy)
+        deer([randomInt(prng, -12, 12), 25], velocityNormalNy)
+        await wait(0.5)
+        deer([25, randomInt(prng, -12, 12)], velocityNormalNx)
+        sheep([25, randomInt(prng, -12, 12)], velocityNormalNx)
+        await wait(0.5)
     }
 
-    builder.wait(10)
+    await wait(10)
 
     for (let i = 0; i < 12; i++) {
-        builder.deer([randomInt(prng, -12, 12), 25], velocityNormalNy)
-        builder.deer([randomInt(prng, -12, 12), 25], velocityNormalNy)
-        builder.wait(0.5)
-        builder.deer([-25, randomInt(prng, -12, 12)], velocityNormalPx)
-        builder.deer([randomInt(prng, -12, 12), 25], velocityNormalNy)
-        builder.wait(0.5)
+        deer([randomInt(prng, -12, 12), 25], velocityNormalNy)
+        deer([randomInt(prng, -12, 12), 25], velocityNormalNy)
+        await wait(0.5)
+        deer([-25, randomInt(prng, -12, 12)], velocityNormalPx)
+        deer([randomInt(prng, -12, 12), 25], velocityNormalNy)
+        await wait(0.5)
     }
 
-    builder.wait(10)
+    await wait(10)
 
     for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 10; j++) {
-            builder.deer([randomInt(prng, -12, 12), 25], velocityNormalNy)
+            deer([randomInt(prng, -12, 12), 25], velocityNormalNy)
         }
-        builder.wait(3)
-    }
-
-    addSharedPostRound(builder)
-
-    return {
-        steps: builder.steps
+        await wait(3)
     }
 }
 
-export function round13(): Round {
-    const builder = new RoundBuilder()
+export async function round13(roundFunctions: RoundFunctions) {
+    const { wait, deer } = roundFunctions
 
     const prng = PRng.new(13)
 
     for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 10; j++) {
-            builder.deer([randomInt(prng, -12, 12), 25], velocityNormalNy)
+            deer([randomInt(prng, -12, 12), 25], velocityNormalNy)
         }
-        builder.wait(3)
+        await wait(3)
     }
 
-    builder.wait(10)
+    await wait(10)
 
     for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 10; j++) {
-            builder.deer([randomInt(prng, -12, 12), -25], velocityNormalPy)
+            deer([randomInt(prng, -12, 12), -25], velocityNormalPy)
         }
-        builder.wait(2)
-    }
-
-    addSharedPostRound(builder)
-
-    return {
-        steps: builder.steps
+        await wait(2)
     }
 }
 
-export function round14(): Round {
-    const builder = new RoundBuilder()
+export async function round14(roundFunctions: RoundFunctions) {
+    const { wait, sheep, deer } = roundFunctions
 
     const prng = PRng.new(14)
 
     for (let i = 0; i < 20; i++) {
         for (let j = 0; j < 5; j++) {
-            builder.sheep([25, randomInt(prng, -12, 12)], velocityNormalNx)
-            builder.wait(0.3)
+            sheep([25, randomInt(prng, -12, 12)], velocityNormalNx)
+            await wait(0.3)
         }
 
-        builder.deer([randomInt(prng, -12, 12), -25], velocityNormalPy)
-    }
-
-    addSharedPostRound(builder)
-
-    return {
-        steps: builder.steps
+        deer([randomInt(prng, -12, 12), -25], velocityNormalPy)
     }
 }
 
 export function getRounds(): Round[] {
     return [
-        round1(),
-        round2(),
-        round3(),
-        round4(),
-        round5(),
-        round6(),
-        round7(),
-        round8(),
-        round9(),
-        round11(),
-        round12(),
-        round13(),
-        round14(),
-    ]
+        round1,
+        round2,
+        round3,
+        round4,
+        round5,
+        round6,
+        round7,
+        round8,
+        round9,
+        round11,
+        round12,
+        round13,
+        round14,
+    ].map(round => async (props: RoundRunProps, components: RoundsSystemInputs) => {
+        const roundFunctions = useRoundFunctions(props, components)
+        await round(roundFunctions)
+        await roundFunctions.wait(10)
+    })
 }

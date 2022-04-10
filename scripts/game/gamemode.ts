@@ -59,7 +59,6 @@ export class GameModeRounds implements GameMode {
             currentRound: -1,
             state: "init",
             timeBetweenRounds: 5,
-            remainingSteps: [],
             rounds: getRounds(),
             bounds: { min: [-12, -12], max: [12, 12] },
         },

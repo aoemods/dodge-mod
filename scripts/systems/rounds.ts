@@ -2,7 +2,7 @@ import { TransformComponent } from "../components/transform"
 import { EntityComponents, SingletonComponent } from "../ecs/components"
 import { System } from "../ecs/systems"
 import { AoeEntityComponent } from "../components/aoeentity"
-import { spawnEntity, vector2ToPosition } from "../core/util"
+import { spawnEntity } from "../core/util"
 import { RoundsComponent } from "../components/rounds"
 import { createTask, stopTask } from "../core/tasks"
 import { newEntityId } from "../ecs/entity"
@@ -25,77 +25,14 @@ export type RoundsSystemInputs = {
     players: EntityComponents<PlayerComponent>
 }
 
-function startProcessSteps(components: RoundsSystemInputs) {
-    function processNextStep() {
-        components.rounds.currentTask = undefined
-        if (components.rounds.remainingSteps.length === 0) {
-            components.rounds.state = "finished"
-            Sound_Play2D(sfxs.roundVictory)
-            UI_CreateEventCue(LOC(`Completed round ${components.rounds.currentRound + 1}`), undefined, "", "", "sfx_ui_event_queue_high_priority_play")
-            return
-        }
-
-        const step = components.rounds.remainingSteps.splice(0, 1)[0]
-
-        switch (step.type) {
-            case "wait":
-                print(`-- Step wait ${step.time}`)
-                components.rounds.currentTask = createTask({
-                    interval: step.time,
-                    callback: () => processNextStep(),
-                })
-                break
-            case "spawnProjectile":
-                print("-- Step spawn projectile")
-                const playerEntityId = Object.keys(components.players)[0]
-                const player = components.players[playerEntityId]
-
-                const projectileEntityId = newEntityId()
-
-                const projectileEntity = spawnEntity(
-                    player.aoePlayer,
-                    vector2ToPosition(step.position),
-                    step.pbg,
-                    {
-                        unselectable: true,
-                    }
-                )
-
-                components.aoeEntities[projectileEntityId] = {
-                    entityId: projectileEntity,
-                    syncMode: "master",
-                }
-
-                components.rigidBodies[projectileEntityId] = {
-                    velocity: step.velocity,
-                    force: [0, 0],
-                }
-
-                components.playerOwneds[projectileEntityId] = {
-                    owningPlayerId: playerEntityId,
-                }
-
-                components.collisions[projectileEntityId] = {
-                    radius: 0.6,
-                }
-
-                components.lifetimes[projectileEntityId] = {
-                    remainingTime: 20
-                }
-
-                components.transforms[projectileEntityId] = {
-                    position: [...step.position],
-                    heading: [step.velocity[0], 0, step.velocity[1]],
-                }
-
-                processNextStep()
-                break
-            default:
-                print(`Unknown step type ${type}`)
-        }
+async function startRound(components: RoundsSystemInputs) {
+    const { currentRoundRunProps, currentRound } = components.rounds
+    if (!currentRoundRunProps) {
+        throw new Error("Round run props was undefined in startRound()")
     }
 
-    processNextStep()
+    const round = components.rounds.rounds[currentRound]
+    await round(currentRoundRunProps, components)
 }
 
 const civHeroBlueprints: Record<string, string> = pbgs.spearman
@@ -180,8 +117,14 @@ export const roundsSystem: System<RoundsSystemInputs> = (components: RoundsSyste
                 print("Respawning heroes")
 
                 if (rounds.currentRound < rounds.rounds.length) {
-                    rounds.remainingSteps = [...rounds.rounds[rounds.currentRound].steps]
-                    startProcessSteps(components)
+                    rounds.currentRoundRunProps = { stopped: false }
+                    startRound(components)
+                        .then(() => {
+                            components.rounds.state = "finished"
+                            Sound_Play2D(sfxs.roundVictory)
+                            UI_CreateEventCue(LOC(`Completed round ${components.rounds.currentRound + 1}`), undefined, "", "", "sfx_ui_event_queue_high_priority_play")
+                        })
+                        .catch(reason => print(`Round stopped, reason: ${reason}`))
                 } else {
                     print("Game over!")
                     UI_CreateEventCue(LOC(`Completed all rounds, the game is over`), undefined, "", "", "sfx_ui_event_queue_high_priority_play")
@@ -224,6 +167,11 @@ export const roundsSystem: System<RoundsSystemInputs> = (components: RoundsSyste
 
         if (rounds.currentTask) {
             stopTask(rounds.currentTask)
+        }
+
+        if (rounds.currentRoundRunProps) {
+            rounds.currentRoundRunProps.stopped = true
+            rounds.currentRoundRunProps = undefined
         }
 
         rounds.state = "waiting"
