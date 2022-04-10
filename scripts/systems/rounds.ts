@@ -11,6 +11,7 @@ import { PlayerOwnedComponent } from "../components/playerowned"
 import { CollisionComponent, CollisionResultsComponent } from "../components/collision"
 import { PlayerComponent } from "../components/player"
 import { RigidBodyComponent } from "../components/rigidbody"
+import { pbgs, sfxs } from "../constants"
 
 export type RoundsSystemInputs = {
     rounds: SingletonComponent<RoundsComponent>
@@ -29,7 +30,7 @@ function startProcessSteps(components: RoundsSystemInputs) {
         components.rounds.currentTask = undefined
         if (components.rounds.remainingSteps.length === 0) {
             components.rounds.state = "finished"
-            Sound_Play2D("Conquest_enemy_eliminated")
+            Sound_Play2D(sfxs.roundVictory)
             UI_CreateEventCue(LOC(`Completed round ${components.rounds.currentRound + 1}`), undefined, "", "", "sfx_ui_event_queue_high_priority_play")
             return
         }
@@ -54,7 +55,7 @@ function startProcessSteps(components: RoundsSystemInputs) {
                 const projectileEntity = spawnEntity(
                     player.aoePlayer,
                     vector2ToPosition(step.position),
-                    "gaia_herdable_sheep",
+                    pbgs.sheep,
                     {
                         unselectable: true,
                     }
@@ -79,7 +80,7 @@ function startProcessSteps(components: RoundsSystemInputs) {
                 }
 
                 components.lifetimes[projectileEntityId] = {
-                    remainingTime: 10
+                    remainingTime: 20
                 }
 
                 components.transforms[projectileEntityId] = {
@@ -97,16 +98,7 @@ function startProcessSteps(components: RoundsSystemInputs) {
     processNextStep()
 }
 
-const civHeroBlueprints: Record<string, string> = {
-    "english": "unit_spearman_4_eng",
-    "chinese": "unit_spearman_4_chi",
-    "french": "unit_spearman_4_fre",
-    "hre": "unit_spearman_4_hre",
-    "mongol": "unit_spearman_4_mon",
-    "rus": "unit_spearman_4_rus",
-    "sultanate": "unit_spearman_4_sul",
-    "abbasid": "unit_spearman_4_abb",
-}
+const civHeroBlueprints: Record<string, string> = pbgs.spearman
 
 function playerHeroExists(playerEntityId: string, components: RoundsSystemInputs) {
     return Object.entries(components.aoeEntities).some(([entId, aoeEnt]) =>
@@ -221,7 +213,7 @@ export const roundsSystem: System<RoundsSystemInputs> = (components: RoundsSyste
     if (Object.values(components.aoeEntities).filter(aoeEntity => aoeEntity.syncMode === "slave").length === 0) {
         print("All heroes are dead, restarting...")
 
-        Sound_Play2D("mus_stinger_landmark_objective_complete_fail")
+        Sound_Play2D(sfxs.roundFailure)
         UI_CreateEventCue(LOC(`Failed on round ${components.rounds.currentRound + 1}, restarting from round 1...`), undefined, "", "", "sfx_ui_event_queue_high_priority_play")
 
         for (const entityId in components.aoeEntities) {

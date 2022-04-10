@@ -9,7 +9,32 @@ export type EntitySyncSystemInputs = {
     transforms: EntityComponents<TransformComponent>
 }
 
-export const entitySyncSystem: System<EntitySyncSystemInputs> = (components: EntitySyncSystemInputs) => {
+export const entitySyncSystemPre: System<EntitySyncSystemInputs> = (components: EntitySyncSystemInputs) => {
+    const { aoeEntities, transforms } = components
+
+    for (const [entityId, aoeEntity] of Object.entries(aoeEntities)) {
+        const transformComponent = transforms[entityId]
+
+        const syncPosition = !aoeEntity.syncProperties || (aoeEntity.syncProperties & EntitySyncProperty.Position) === EntitySyncProperty.Position
+        const syncHeading = !aoeEntity.syncProperties || (aoeEntity.syncProperties & EntitySyncProperty.Heading) === EntitySyncProperty.Heading
+
+        switch (aoeEntity.syncMode) {
+            case "slave":
+                if (syncPosition) {
+                    const entityPosition = Entity_GetPosition(aoeEntity.entityId)
+                    copyPositionToVector2(transformComponent.position, entityPosition)
+                }
+
+                if (syncHeading) {
+                    const entityHeading = Entity_GetHeading(aoeEntity.entityId)
+                    copyPositionToVector3(transformComponent.heading, entityHeading)
+                }
+                break
+        }
+    }
+}
+
+export const entitySyncSystemPost: System<EntitySyncSystemInputs> = (components: EntitySyncSystemInputs) => {
     const { aoeEntities, transforms } = components
 
     for (const [entityId, aoeEntity] of Object.entries(aoeEntities)) {
@@ -26,17 +51,6 @@ export const entitySyncSystem: System<EntitySyncSystemInputs> = (components: Ent
 
                 if (syncHeading) {
                     Entity_SetHeading(aoeEntity.entityId, vector3ToPosition(transformComponent.heading), true)
-                }
-                break
-            case "slave":
-                if (syncPosition) {
-                    const entityPosition = Entity_GetPosition(aoeEntity.entityId)
-                    copyPositionToVector2(transformComponent.position, entityPosition)
-                }
-
-                if (syncHeading) {
-                    const entityHeading = Entity_GetHeading(aoeEntity.entityId)
-                    copyPositionToVector3(transformComponent.heading, entityHeading)
                 }
                 break
         }

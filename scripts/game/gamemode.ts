@@ -8,7 +8,7 @@ import { TransformComponent } from "../components/transform"
 import { EntityComponents, SingletonComponent } from "../ecs/components"
 import { System } from "../ecs/systems"
 import { collisionSystem } from "../systems/collision"
-import { entitySyncSystem } from "../systems/entitysync"
+import { entitySyncSystemPre, entitySyncSystemPost } from "../systems/entitysync"
 import { lifetimeSystem } from "../systems/lifetime"
 import { physicsSystem } from "../systems/physics"
 import { createTask } from "../core/tasks"
@@ -38,11 +38,12 @@ type GameComponent = {
 type GameSystemInputs = GameComponent
 
 const gameSystem: System<GameSystemInputs> = (components: GameSystemInputs) => {
+    entitySyncSystemPre(components)
     physicsSystem(components)
     collisionSystem(components)
     lifetimeSystem(components)
     roundsSystem(components)
-    entitySyncSystem(components)
+    entitySyncSystemPost(components)
 }
 
 export class GameModeRounds implements GameMode {

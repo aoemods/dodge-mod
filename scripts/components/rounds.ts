@@ -18,18 +18,28 @@ export type Round = {
     steps: RoundStep[]
 }
 
-export function makeStepSpawnProjectile(position: Vector2, velocity: Vector2): RoundStepSpawnProjectile {
-    return {
-        type: "spawnProjectile",
-        position,
-        velocity,
-    }
-}
+export class RoundBuilder {
+    private _steps: RoundStep[] = []
 
-export function makeStepWait(time: number): RoundStepWait {
-    return {
-        type: "wait",
-        time,
+    spawnProjectile(position: Vector2, velocity: Vector2) {
+        this._steps.push({
+            type: "spawnProjectile",
+            position,
+            velocity,
+        })
+    }
+
+    wait(time: number) {
+        this._steps.push({
+            type: "wait",
+            time,
+        })
+
+        Encounter.ClearGoal()
+    }
+
+    get steps(): RoundStep[] {
+        return [...this._steps]
     }
 }
 

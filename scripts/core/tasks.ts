@@ -5,7 +5,7 @@ export type TaskDefinition = {
 }
 
 export type Task = {
-    id: any
+    id: number
 }
 
 let nextTaskIndex = 0

@@ -1,82 +1,50 @@
-import { makeStepSpawnProjectile, makeStepWait, Round, RoundStep } from "../components/rounds"
+import { Round, RoundBuilder } from "../components/rounds"
+import { PRng } from "../core/prng"
+import { randomInt } from "../core/util"
+import { Vector2 } from "../core/vector2"
+
+const speedNormal = 4
+const velocityNormalPx: Vector2 = [speedNormal, 0]
+const velocityNormalNx: Vector2 = [-speedNormal, 0]
+const velocityNormalPy: Vector2 = [0, speedNormal]
+const velocityNormalNy: Vector2 = [0, -speedNormal]
+
+function addSharedPostRound(builder: RoundBuilder) {
+    builder.wait(10)
+}
 
 export function round1(): Round {
+    const builder = new RoundBuilder()
+
+    builder.spawnProjectile([25, 0], velocityNormalNx)
+    builder.wait(1.5)
+    builder.spawnProjectile([25, 0], velocityNormalNx)
+    builder.wait(1.5)
+    builder.spawnProjectile([25, 10], velocityNormalNx)
+    builder.wait(1.5)
+    builder.spawnProjectile([25, -10], velocityNormalNx)
+    builder.wait(1.5)
+    builder.spawnProjectile([25, -7], velocityNormalNx)
+    builder.wait(1.5)
+    builder.spawnProjectile([25, 7], velocityNormalNx)
+    builder.wait(1.5)
+    builder.spawnProjectile([25, 3], velocityNormalNx)
+    builder.wait(1.5)
+    builder.spawnProjectile([25, -3], velocityNormalNx)
+    builder.wait(1.5)
+    builder.spawnProjectile([25, 12], velocityNormalNx)
+    builder.wait(1.5)
+    builder.spawnProjectile([25, -11], velocityNormalNx)
+
+    addSharedPostRound(builder)
+
     return {
-        steps: [
-            makeStepSpawnProjectile([25, 0], [-10, 0]),
-            makeStepWait(1.5),
-            makeStepSpawnProjectile([25, 0], [-10, 0]),
-            makeStepWait(1.5),
-            makeStepSpawnProjectile([25, 10], [-10, 0]),
-            makeStepWait(1.5),
-            makeStepSpawnProjectile([25, -10], [-10, 0]),
-            makeStepWait(1.5),
-            makeStepSpawnProjectile([25, -7], [-10, 0]),
-            makeStepWait(1.5),
-            makeStepSpawnProjectile([25, 7], [-10, 0]),
-            makeStepWait(1.5),
-            makeStepSpawnProjectile([25, 3], [-10, 0]),
-            makeStepWait(1.5),
-            makeStepSpawnProjectile([25, -3], [-10, 0]),
-            makeStepWait(1.5),
-            makeStepSpawnProjectile([25, 12], [-10, 0]),
-            makeStepWait(1.5),
-            makeStepSpawnProjectile([25, -11], [-10, 0]),
-            makeStepWait(5),
-        ]
+        steps: builder.steps
     }
 }
 
 export function round2(): Round {
-    const steps: RoundStep[] = []
-
-    for (let i = 0; i < 10; i++) {
-        steps.push(makeStepSpawnProjectile([-25, i * 4 - 20], [10, 0]))
-        if (i % 2 === 0) {
-            steps.push(makeStepSpawnProjectile([-25, i * 4 - 17], [10, 0]))
-        }
-        steps.push(makeStepWait(1.2))
-    }
-
-    steps.push(makeStepWait(3))
-
-    return {
-        steps
-    }
-}
-
-export function round3(): Round {
-    const steps: RoundStep[] = []
-
-    for (let i = 0; i < 10; i++) {
-        steps.push(makeStepSpawnProjectile([-25, i * 4 - 20], [10, 0]))
-        steps.push(makeStepWait(0.5))
-
-        if (i % 3 === 0) {
-            steps.push(makeStepSpawnProjectile([i * 4 - 20, -25], [0, 10]))
-            steps.push(makeStepWait(0.5))
-        }
-    }
-
-    steps.push(makeStepWait(3))
-
-    for (let i = 0; i < 8; i++) {
-        steps.push(makeStepSpawnProjectile([-25, i * 5 - 20], [10, 0]))
-        if (i % 2 === 0) {
-            steps.push(makeStepSpawnProjectile([25, i * 5 - 18], [-10, 0]))
-        }
-        steps.push(makeStepWait(0.5))
-    }
-
-    steps.push(makeStepWait(5))
-
-    return {
-        steps
-    }
-}
-
-export function round4(): Round {
-    const steps: RoundStep[] = []
+    const builder = new RoundBuilder()
 
     const seq = [
         -10, 8, -8, 2, -4, 12, 15, 9, -3, -1,
@@ -85,26 +53,26 @@ export function round4(): Round {
     ]
 
     for (let i = 0; i < seq.length; i++) {
-        steps.push(makeStepSpawnProjectile([-25, seq[i]], [10, 0]))
-        steps.push(makeStepWait(0.5))
+        builder.spawnProjectile([-25, seq[i]], velocityNormalPx)
+        builder.wait(0.7)
     }
 
-    steps.push(makeStepWait(2))
+    builder.wait(5)
 
     for (let i = 0; i < seq.length; i++) {
-        steps.push(makeStepSpawnProjectile([seq[i], 25], [0, -10]))
-        steps.push(makeStepWait(0.5))
+        builder.spawnProjectile([seq[i], 25], velocityNormalNy)
+        builder.wait(0.7)
     }
 
-    steps.push(makeStepWait(5))
+    addSharedPostRound(builder)
 
     return {
-        steps
+        steps: builder.steps
     }
 }
 
-export function round5(): Round {
-    const steps: RoundStep[] = []
+export function round3(): Round {
+    const builder = new RoundBuilder()
 
     const seq = [
         -2, 10, 2, 1, -4, -5, 4, -12, 12, 0,
@@ -113,21 +81,105 @@ export function round5(): Round {
     ]
 
     for (let i = 0; i < seq.length; i++) {
-        steps.push(makeStepSpawnProjectile([25, seq[i]], [-10, 0]))
-        steps.push(makeStepWait(0.3))
+        builder.spawnProjectile([25, seq[i]], velocityNormalNx)
+        builder.wait(0.3)
     }
 
-    steps.push(makeStepWait(2))
+    builder.wait(4)
 
     for (let i = 0; i < seq.length; i++) {
-        steps.push(makeStepSpawnProjectile([seq[i], -25], [0, 10]))
-        steps.push(makeStepWait(0.3))
+        builder.spawnProjectile([seq[i], -25], velocityNormalPy)
+        builder.wait(0.3)
     }
 
-    steps.push(makeStepWait(5))
+    addSharedPostRound(builder)
 
     return {
-        steps
+        steps: builder.steps
+    }
+}
+
+export function round4(): Round {
+    const builder = new RoundBuilder()
+
+    const prng = PRng.new(6)
+
+    for (let i = 0; i < 20; i++) {
+        builder.spawnProjectile([randomInt(prng, -12, 12), -25], velocityNormalPy)
+        builder.wait(0.5)
+        builder.spawnProjectile([25, randomInt(prng, -12, 12)], velocityNormalNx)
+        builder.wait(0.5)
+    }
+
+    builder.wait(10)
+
+    for (let i = 0; i < 20; i++) {
+        builder.spawnProjectile([randomInt(prng, -12, 12), 25], velocityNormalNy)
+        builder.wait(0.5)
+        builder.spawnProjectile([25, randomInt(prng, -12, 12)], velocityNormalNx)
+        builder.wait(0.5)
+    }
+
+    addSharedPostRound(builder)
+
+    return {
+        steps: builder.steps
+    }
+}
+
+export function round5(): Round {
+    const builder = new RoundBuilder()
+
+    const prng = PRng.new(7)
+
+    for (let i = 0; i < 35; i++) {
+        builder.spawnProjectile([randomInt(prng, -12, 12), 25], velocityNormalNy)
+        builder.spawnProjectile([25, randomInt(prng, -12, 12)], velocityNormalNx)
+        builder.wait(0.8)
+    }
+
+    builder.wait(10)
+
+    for (let i = 0; i < 35; i++) {
+        builder.spawnProjectile([randomInt(prng, -12, 12), -25], velocityNormalPy)
+        builder.spawnProjectile([25, randomInt(prng, -12, 12)], velocityNormalNx)
+        builder.wait(0.8)
+    }
+
+    addSharedPostRound(builder)
+
+    return {
+        steps: builder.steps
+    }
+}
+
+export function round6(): Round {
+    const builder = new RoundBuilder()
+
+    const prng = PRng.new(8)
+
+    for (let i = 0; i < 15; i++) {
+        const center = randomInt(prng, -12, 12)
+        for (let j = -3; j <= 3; j++) {
+            builder.spawnProjectile([center + j, 25], velocityNormalNy)
+        }
+        builder.wait(1.5)
+    }
+
+    builder.wait(10)
+
+    for (let i = 0; i < 15; i++) {
+        const center = randomInt(prng, -12, 12)
+        for (let j = -5; j <= 5; j++) {
+            builder.spawnProjectile([center + j, 25], velocityNormalNy)
+        }
+        builder.wait(2)
+    }
+
+    addSharedPostRound(builder)
+
+    return {
+        steps: builder.steps
     }
 }
 
@@ -138,5 +190,6 @@ export function getRounds(): Round[] {
         round3(),
         round4(),
         round5(),
+        round6(),
     ]
 }

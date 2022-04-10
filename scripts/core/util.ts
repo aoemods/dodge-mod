@@ -1,5 +1,6 @@
 import { Vector2 } from "./vector2"
 import { Vector3 } from "./vector3"
+import { PRng } from "./prng"
 
 export function getSquadGroupEntity(squadGroup: SGroupID) {
     return Squad_EntityAt(SGroup_GetSpawnedSquadAt(squadGroup, 1), 0)
@@ -58,4 +59,15 @@ export function copyPositionToVector3(vector: Vector3, position: Position) {
     vector[0] = position.x
     vector[1] = position.y
     vector[2] = position.z
+}
+
+/**
+ * Returns a random integer in a range.
+ * @param min Minimum value (inclusive)
+ * @param max Maximum value (inclusive)
+ * @returns Random integer between min (inclusive) and max (inclusive).
+ */
+export function randomInt(prng: PRng, min: number, max: number) {
+    const range = (max - min) + 1
+    return (prng.get_random_32() % range) + min
 }
