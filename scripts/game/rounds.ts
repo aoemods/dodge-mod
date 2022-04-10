@@ -36,15 +36,17 @@ export const projectileTypeData: Record<ProjectileType, ProjectileTypeData> = {
  * @noSelf
  * Should be a type, but tstl seems to generate the wrong code.
 */
-export interface RoundFunctions {
+export interface RoundInputs {
     wait: (time: number) => Promise<void>
-    sheep: (position: Vector2, direction: Vector2) => void
-    wolf: (position: Vector2, direction: Vector2) => void
-    deer: (position: Vector2, direction: Vector2) => void
-    boar: (position: Vector2, direction: Vector2) => void
+    sheep: (position: Vector2, direction: Vector2) => number
+    wolf: (position: Vector2, direction: Vector2) => number
+    deer: (position: Vector2, direction: Vector2) => number
+    boar: (position: Vector2, direction: Vector2) => number
+    boss: (bossEntityId: number, pbg: string) => void
+    components: RoundsSystemInputs
 }
 
-export function useRoundFunctions(props: RoundRunProps, components: RoundsSystemInputs): RoundFunctions {
+export function useRoundInputs(props: RoundRunProps, components: RoundsSystemInputs): RoundInputs {
     async function wait(time: number): Promise<void> {
         return new Promise((resolve, reject) => {
             createTask({
@@ -60,7 +62,7 @@ export function useRoundFunctions(props: RoundRunProps, components: RoundsSystem
         })
     }
 
-    function spawnProjectile(position: Vector2, velocity: Vector2, pbg: string) {
+    function spawnProjectile(position: Vector2, velocity: Vector2, pbg: string): number {
         const playerEntityId = Object.keys(components.players)[0]
         const player = components.players[playerEntityId]
 
@@ -101,28 +103,102 @@ export function useRoundFunctions(props: RoundRunProps, components: RoundsSystem
             position: [...position],
             heading: [velocity[0], 0, velocity[1]],
         }
+
+        components.collisionActions[projectileEntityId] = {
+            actions: [{
+                type: "killPlayer",
+            }]
+        }
+
+        return projectileEntityId
+    }
+
+    async function boss(bossEntityId: number, pbg: string) {
+        const position: Vector2 = [25, 0]
+        const playerEntityId = Object.keys(components.players)[0]
+        const player = components.players[playerEntityId]
+
+        const projectileEntity = spawnEntity(
+            player.aoePlayer,
+            vector2ToPosition(position),
+            pbg,
+            {
+                unselectable: true,
+            }
+        )
+
+        components.aoeEntities[bossEntityId] = {
+            entityId: projectileEntity,
+            syncMode: "master",
+        }
+
+        components.pingPongs[bossEntityId] = {
+            speed: 2,
+            goingTo: "a",
+            positionA: [25, -12],
+            positionB: [25, 12],
+        }
+
+        components.playerOwneds[bossEntityId] = {
+            owningPlayerId: playerEntityId,
+        }
+
+        components.collisions[bossEntityId] = {
+            radius: 0.6,
+        }
+
+        components.transforms[bossEntityId] = {
+            position: [...position],
+            heading: [-1, 0, 0],
+        }
+
+        components.healths[bossEntityId] = {
+            current: 5,
+        }
+
+        UI_CreateEventCue(LOC(`Boss spawned, run into wolves to kill it!`), undefined, "", "", "sfx_ui_event_queue_high_priority_play")
+
+        while (bossEntityId in components.healths && components.healths[bossEntityId].current > 0) {
+            print(`Boss hp: ${components.healths[bossEntityId].current}`)
+            await wait(0.5)
+        }
+
+        print("Boss done")
+
+        if (bossEntityId in components.healths) {
+            components.lifetimes[bossEntityId] = {
+                remainingTime: 0,
+            }
+        }
     }
 
     function projectile(type: ProjectileType, position: Vector2, direction: Vector2) {
         const { pbg, speed } = projectileTypeData[type]
         const velocity = v2.scale(direction, speed)
-        spawnProjectile(position, velocity, pbg)
+        return spawnProjectile(position, velocity, pbg)
     }
 
-    function sheep(position: Vector2, direction: Vector2) {
-        projectile(ProjectileType.Sheep, position, direction)
+    function sheep(position: Vector2, direction: Vector2): number {
+        return projectile(ProjectileType.Sheep, position, direction)
     }
 
-    function wolf(position: Vector2, direction: Vector2) {
-        projectile(ProjectileType.Wolf, position, direction)
+    function wolf(position: Vector2, direction: Vector2): number {
+        const projEntityId = projectile(ProjectileType.Wolf, position, direction)
+
+        components.collisionActions[projEntityId].actions = [{
+            type: "damageBoss",
+            amount: 1,
+        }]
+
+        return projEntityId
     }
 
-    function deer(position: Vector2, direction: Vector2) {
-        projectile(ProjectileType.Deer, position, direction)
+    function deer(position: Vector2, direction: Vector2): number {
+        return projectile(ProjectileType.Deer, position, direction)
     }
 
-    function boar(position: Vector2, direction: Vector2) {
-        projectile(ProjectileType.Boar, position, direction)
+    function boar(position: Vector2, direction: Vector2): number {
+        return projectile(ProjectileType.Boar, position, direction)
     }
 
     return {
@@ -131,11 +207,13 @@ export function useRoundFunctions(props: RoundRunProps, components: RoundsSystem
         wolf,
         deer,
         boar,
+        boss,
+        components,
     }
 }
 
-export async function round1(roundFunctions: RoundFunctions) {
-    const { wait, sheep } = roundFunctions
+export async function round1(roundInputs: RoundInputs) {
+    const { wait, sheep } = roundInputs
 
     sheep([25, 0], velocityNormalNx)
     await wait(1.5)
@@ -158,8 +236,8 @@ export async function round1(roundFunctions: RoundFunctions) {
     sheep([25, -11], velocityNormalNx)
 }
 
-export async function round2(roundFunctions: RoundFunctions) {
-    const { wait, sheep } = roundFunctions
+export async function round2(roundInputs: RoundInputs) {
+    const { wait, sheep } = roundInputs
 
     const seq = [
         -10, 8, -8, 2, -4, 12, 15, 9, -3, -1,
@@ -180,8 +258,8 @@ export async function round2(roundFunctions: RoundFunctions) {
     }
 }
 
-export async function round3(roundFunctions: RoundFunctions) {
-    const { wait, sheep } = roundFunctions
+export async function round3(roundInputs: RoundInputs) {
+    const { wait, sheep } = roundInputs
 
     const seq = [
         -2, 10, 2, 1, -4, -5, 4, -12, 12, 0,
@@ -202,8 +280,8 @@ export async function round3(roundFunctions: RoundFunctions) {
     }
 }
 
-export async function round4(roundFunctions: RoundFunctions) {
-    const { wait, sheep } = roundFunctions
+export async function round4(roundInputs: RoundInputs) {
+    const { wait, sheep } = roundInputs
 
     const prng = PRng.new(4)
 
@@ -224,8 +302,8 @@ export async function round4(roundFunctions: RoundFunctions) {
     }
 }
 
-export async function round5(roundFunctions: RoundFunctions) {
-    const { wait, sheep } = roundFunctions
+export async function round5(roundInputs: RoundInputs) {
+    const { wait, sheep } = roundInputs
 
     const prng = PRng.new(5)
 
@@ -244,8 +322,8 @@ export async function round5(roundFunctions: RoundFunctions) {
     }
 }
 
-export async function round6(roundFunctions: RoundFunctions) {
-    const { wait, sheep } = roundFunctions
+export async function round6(roundInputs: RoundInputs) {
+    const { wait, sheep } = roundInputs
 
     const prng = PRng.new(6)
 
@@ -268,8 +346,8 @@ export async function round6(roundFunctions: RoundFunctions) {
     }
 }
 
-export async function round7(roundFunctions: RoundFunctions) {
-    const { wait, sheep } = roundFunctions
+export async function round7(roundInputs: RoundInputs) {
+    const { wait, sheep } = roundInputs
 
     const prng = PRng.new(7)
 
@@ -293,8 +371,8 @@ export async function round7(roundFunctions: RoundFunctions) {
     }
 }
 
-export async function round8(roundFunctions: RoundFunctions) {
-    const { wait, sheep } = roundFunctions
+export async function round8(roundInputs: RoundInputs) {
+    const { wait, sheep } = roundInputs
 
     const prng = PRng.new(8)
 
@@ -307,8 +385,8 @@ export async function round8(roundFunctions: RoundFunctions) {
     }
 }
 
-export async function round9(roundFunctions: RoundFunctions) {
-    const { wait, sheep } = roundFunctions
+export async function round9(roundInputs: RoundInputs) {
+    const { wait, sheep } = roundInputs
 
     const prng = PRng.new(9)
 
@@ -326,10 +404,61 @@ export async function round9(roundFunctions: RoundFunctions) {
     }
 }
 
-// TODO: round10... bossround
+export async function round10(roundInputs: RoundInputs) {
+    const { wait, sheep, wolf, boss, components } = roundInputs
 
-export async function round11(roundFunctions: RoundFunctions) {
-    const { wait, sheep, deer } = roundFunctions
+    let done = false
+
+    const bossEntityId = newEntityId()
+
+    async function spawnExtraSheep() {
+        const prng = PRng.new(888810)
+        let extraSheepCount = 1
+        let spawnDelay = 1.8
+        while (!done) {
+            for (let i = 0; i < 12; i++) {
+                for (let j = 0; j < extraSheepCount; j++) {
+                    sheep([randomInt(prng, -12, 12), 25], velocityNormalNy)
+                }
+                await wait(spawnDelay)
+
+                if (done) {
+                    break
+                }
+            }
+
+            extraSheepCount++
+            spawnDelay = Math.max(spawnDelay - 0.1, 1)
+        }
+    }
+
+    async function spawnBossSheep() {
+        const prng = PRng.new(777710)
+        let nextWolf = 3
+        while (!done) {
+            if (bossEntityId in components.transforms) {
+                const bossPosition = components.transforms[bossEntityId].position
+                if (nextWolf <= 0) {
+                    wolf(bossPosition, velocityNormalNx)
+                    nextWolf = randomInt(prng, 4, 8)
+                } else {
+                    sheep(bossPosition, velocityNormalNx)
+                    nextWolf--
+                }
+            }
+
+            await wait(3)
+        }
+    }
+
+    spawnBossSheep()
+    spawnExtraSheep()
+    await boss(bossEntityId, pbgs.boar)
+    done = true
+}
+
+export async function round11(roundInputs: RoundInputs) {
+    const { wait, sheep, deer } = roundInputs
 
     const prng = PRng.new(11)
 
@@ -352,8 +481,8 @@ export async function round11(roundFunctions: RoundFunctions) {
     }
 }
 
-export async function round12(roundFunctions: RoundFunctions) {
-    const { wait, sheep, deer } = roundFunctions
+export async function round12(roundInputs: RoundInputs) {
+    const { wait, sheep, deer } = roundInputs
 
     const prng = PRng.new(12)
 
@@ -387,8 +516,8 @@ export async function round12(roundFunctions: RoundFunctions) {
     }
 }
 
-export async function round13(roundFunctions: RoundFunctions) {
-    const { wait, deer } = roundFunctions
+export async function round13(roundInputs: RoundInputs) {
+    const { wait, deer } = roundInputs
 
     const prng = PRng.new(13)
 
@@ -409,8 +538,8 @@ export async function round13(roundFunctions: RoundFunctions) {
     }
 }
 
-export async function round14(roundFunctions: RoundFunctions) {
-    const { wait, sheep, deer } = roundFunctions
+export async function round14(roundInputs: RoundInputs) {
+    const { wait, sheep, deer } = roundInputs
 
     const prng = PRng.new(14)
 
@@ -435,13 +564,14 @@ export function getRounds(): Round[] {
         round7,
         round8,
         round9,
+        round10,
         round11,
         round12,
         round13,
         round14,
     ].map(round => async (props: RoundRunProps, components: RoundsSystemInputs) => {
-        const roundFunctions = useRoundFunctions(props, components)
-        await round(roundFunctions)
-        await roundFunctions.wait(10)
+        const roundInputs = useRoundInputs(props, components)
+        await round(roundInputs)
+        await roundInputs.wait(10)
     })
 }

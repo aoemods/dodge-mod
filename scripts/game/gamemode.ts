@@ -4,13 +4,18 @@ import { GameStateComponent } from "../components/gamestate"
 import { LifetimeComponent } from "../components/lifetime"
 import { PlayerOwnedComponent } from "../components/playerowned"
 import { RigidBodyComponent } from "../components/rigidbody"
+import { PingPongComponent } from "../components/pingpong"
+import { HealthComponent } from "../components/health"
 import { TransformComponent } from "../components/transform"
 import { EntityComponents, SingletonComponent } from "../ecs/components"
 import { System } from "../ecs/systems"
 import { collisionSystem } from "../systems/collision"
+import { collisionActionSystem } from "../systems/collisionaction"
 import { entitySyncSystemPre, entitySyncSystemPost } from "../systems/entitysync"
 import { lifetimeSystem } from "../systems/lifetime"
 import { physicsSystem } from "../systems/physics"
+import { pingPongSystem } from "../systems/pingpong"
+import { CollisionActionComponent } from "../components/collisionaction"
 import { createTask } from "../core/tasks"
 import { PlayerComponent } from "../components/player"
 import { newEntityId } from "../ecs/entity"
@@ -26,12 +31,15 @@ type GameComponent = {
     collisionResults: SingletonComponent<CollisionResultsComponent>
     gameState: SingletonComponent<GameStateComponent>
     rounds: SingletonComponent<RoundsComponent>
+    pingPongs: EntityComponents<PingPongComponent>
     rigidBodies: EntityComponents<RigidBodyComponent>
     transforms: EntityComponents<TransformComponent>
     lifetimes: EntityComponents<LifetimeComponent>
     playerOwneds: EntityComponents<PlayerOwnedComponent>
     collisions: EntityComponents<CollisionComponent>
     aoeEntities: EntityComponents<AoeEntityComponent>
+    healths: EntityComponents<HealthComponent>
+    collisionActions: EntityComponents<CollisionActionComponent>
     players: EntityComponents<PlayerComponent>
 }
 
@@ -39,8 +47,10 @@ type GameSystemInputs = GameComponent
 
 const gameSystem: System<GameSystemInputs> = (components: GameSystemInputs) => {
     entitySyncSystemPre(components)
+    pingPongSystem(components)
     physicsSystem(components)
     collisionSystem(components)
+    collisionActionSystem(components)
     lifetimeSystem(components)
     roundsSystem(components)
     entitySyncSystemPost(components)
@@ -65,10 +75,13 @@ export class GameModeRounds implements GameMode {
         collisions: {},
         lifetimes: {},
         playerOwneds: {},
+        pingPongs: {},
         rigidBodies: {},
         transforms: {},
         aoeEntities: {},
         players: {},
+        healths: {},
+        collisionActions: {},
     }
 
     constructor(players: Player[]) {

@@ -11,6 +11,9 @@ import { PlayerOwnedComponent } from "../components/playerowned"
 import { CollisionComponent, CollisionResultsComponent } from "../components/collision"
 import { PlayerComponent } from "../components/player"
 import { RigidBodyComponent } from "../components/rigidbody"
+import { PingPongComponent } from "../components/pingpong"
+import { HealthComponent } from "../components/health"
+import { CollisionActionComponent } from "../components/collisionaction"
 import { pbgs, sfxs } from "../constants"
 
 export type RoundsSystemInputs = {
@@ -22,7 +25,10 @@ export type RoundsSystemInputs = {
     collisions: EntityComponents<CollisionComponent>
     aoeEntities: EntityComponents<AoeEntityComponent>
     rigidBodies: EntityComponents<RigidBodyComponent>
+    pingPongs: EntityComponents<PingPongComponent>
+    healths: EntityComponents<HealthComponent>
     players: EntityComponents<PlayerComponent>
+    collisionActions: EntityComponents<CollisionActionComponent>
 }
 
 async function startRound(components: RoundsSystemInputs) {
@@ -135,21 +141,6 @@ export const roundsSystem: System<RoundsSystemInputs> = (components: RoundsSyste
     } else if (rounds.state === "init") {
         createHeroes(components)
         rounds.state = "finished"
-    }
-
-    // Kill heroes that collide with projectiles
-    for (const collEntities of components.collisionResults.collisionPairs) {
-        print(`Coll ${collEntities[0]} ${collEntities[1]}`)
-        for (let i = 0; i < 2; i++) {
-            const collEntity = collEntities[i]
-            const collOtherEntity = collEntities[1 - i]
-            if (collEntity in components.aoeEntities && components.aoeEntities[collEntity].syncMode === "slave" && (!(collOtherEntity in components.aoeEntities) || components.aoeEntities[collOtherEntity].syncMode !== "slave")) {
-                print("Killed because collided")
-                components.lifetimes[collEntity] = {
-                    remainingTime: 0
-                }
-            }
-        }
     }
 
     // Restart game if no heroes alive

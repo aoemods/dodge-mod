@@ -7,6 +7,9 @@ import { TransformComponent } from "../components/transform"
 import { PlayerOwnedComponent } from "../components/playerowned"
 import { CollisionComponent } from "../components/collision"
 import { AoeEntityComponent } from "../components/aoeentity"
+import { HealthComponent } from "../components/health"
+import { CollisionActionComponent } from "../components/collisionaction"
+import { PingPongComponent } from "../components/pingpong"
 
 export type LifetimeSystemInputs = {
     rigidBodies: EntityComponents<RigidBodyComponent>
@@ -15,6 +18,9 @@ export type LifetimeSystemInputs = {
     playerOwneds: EntityComponents<PlayerOwnedComponent>
     collisions: EntityComponents<CollisionComponent>
     aoeEntities: EntityComponents<AoeEntityComponent>
+    healths: EntityComponents<HealthComponent>
+    collisionActions: EntityComponents<CollisionActionComponent>
+    pingPongs: EntityComponents<PingPongComponent>
     gameState: SingletonComponent<GameStateComponent>
 }
 
@@ -28,6 +34,9 @@ export const lifetimeSystem: System<LifetimeSystemInputs> = (components: Lifetim
         components.rigidBodies,
         components.transforms,
         components.aoeEntities,
+        components.healths,
+        components.collisionActions,
+        components.pingPongs,
     ]
 
     for (const entityId of Object.keys(components.lifetimes)) {
