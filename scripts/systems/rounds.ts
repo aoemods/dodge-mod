@@ -55,7 +55,7 @@ function startProcessSteps(components: RoundsSystemInputs) {
                 const projectileEntity = spawnEntity(
                     player.aoePlayer,
                     vector2ToPosition(step.position),
-                    pbgs.sheep,
+                    step.pbg,
                     {
                         unselectable: true,
                     }
