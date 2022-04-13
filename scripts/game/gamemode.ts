@@ -22,6 +22,8 @@ import { newEntityId } from "../ecs/entity"
 import { RoundsComponent } from "../components/rounds"
 import { roundsSystem } from "../systems/rounds"
 import { getRounds } from "./rounds"
+import { userInterfaceSystem } from "../systems/userinterface"
+import { UserInterfaceComponent } from "../components/userinterface"
 
 export interface GameMode {
     onInit(): void
@@ -31,6 +33,7 @@ type GameComponent = {
     collisionResults: SingletonComponent<CollisionResultsComponent>
     gameState: SingletonComponent<GameStateComponent>
     rounds: SingletonComponent<RoundsComponent>
+    userInterface: SingletonComponent<UserInterfaceComponent>
     pingPongs: EntityComponents<PingPongComponent>
     rigidBodies: EntityComponents<RigidBodyComponent>
     transforms: EntityComponents<TransformComponent>
@@ -54,6 +57,7 @@ const gameSystem: System<GameSystemInputs> = (components: GameSystemInputs) => {
     lifetimeSystem(components)
     roundsSystem(components)
     entitySyncSystemPost(components)
+    userInterfaceSystem(components)
 }
 
 export class GameModeRounds implements GameMode {
@@ -72,6 +76,7 @@ export class GameModeRounds implements GameMode {
             rounds: getRounds(),
             bounds: { min: [-12, -12], max: [12, 12] },
         },
+        userInterface: {},
         collisions: {},
         lifetimes: {},
         playerOwneds: {},
