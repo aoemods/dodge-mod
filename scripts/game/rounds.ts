@@ -381,7 +381,7 @@ export async function round8(roundInputs: RoundInputs) {
         sheep([randomInt(prng, -12, 12), 25], velocityNormalNy)
         sheep([25, randomInt(prng, -12, 12)], velocityNormalNx)
         sheep([-25, randomInt(prng, -12, 12)], velocityNormalPx)
-        await wait(1.2)
+        await wait(1.5)
     }
 }
 
