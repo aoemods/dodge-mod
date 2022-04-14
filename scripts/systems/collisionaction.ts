@@ -5,6 +5,7 @@ import { CollisionResultsComponent } from "../components/collision"
 import { HealthComponent } from "../components/health"
 import { LifetimeComponent } from "../components/lifetime"
 import { AoeEntityComponent } from "../components/aoeentity"
+import { showNotification } from "../core/util"
 
 export type CollisionActionSystemInputs = {
     collisionResults: SingletonComponent<CollisionResultsComponent>
@@ -33,7 +34,7 @@ export const collisionActionSystem: System<CollisionActionSystemInputs> = (compo
                     )) {
                         for (const healthComponent of Object.values(healths)) {
                             healthComponent.current -= action.amount
-                            UI_CreateEventCue(LOC(`Boss health: ${healthComponent.current}`), undefined, "", "", "sfx_ui_event_queue_high_priority_play")
+                            showNotification(`Boss health: ${healthComponent.current}`)
                         }
 
                         lifetimes[sourceEntityId] = {

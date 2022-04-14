@@ -2,7 +2,7 @@ import { TransformComponent } from "../components/transform"
 import { EntityComponents, SingletonComponent } from "../ecs/components"
 import { System } from "../ecs/systems"
 import { AoeEntityComponent } from "../components/aoeentity"
-import { spawnEntity } from "../core/util"
+import { showNotification, spawnEntity } from "../core/util"
 import { RoundsComponent } from "../components/rounds"
 import { createTask, stopTask } from "../core/tasks"
 import { newEntityId } from "../ecs/entity"
@@ -10,7 +10,7 @@ import { LifetimeComponent } from "../components/lifetime"
 import { PlayerOwnedComponent } from "../components/playerowned"
 import { CollisionComponent, CollisionResultsComponent } from "../components/collision"
 import { PlayerComponent } from "../components/player"
-import { RigidBodyComponent } from "../components/rigidbody"
+import { ProjectileComponent } from "../components/projectile"
 import { PingPongComponent } from "../components/pingpong"
 import { HealthComponent } from "../components/health"
 import { CollisionActionComponent } from "../components/collisionaction"
@@ -24,7 +24,7 @@ export type RoundsSystemInputs = {
     playerOwneds: EntityComponents<PlayerOwnedComponent>
     collisions: EntityComponents<CollisionComponent>
     aoeEntities: EntityComponents<AoeEntityComponent>
-    rigidBodies: EntityComponents<RigidBodyComponent>
+    projectiles: EntityComponents<ProjectileComponent>
     pingPongs: EntityComponents<PingPongComponent>
     healths: EntityComponents<HealthComponent>
     players: EntityComponents<PlayerComponent>
@@ -63,7 +63,10 @@ function createHeroes(components: RoundsSystemInputs) {
         const heroEntity = spawnEntity(
             player.aoePlayer,
             World_Pos(0, World_GetHeightAt(0, 0), 0),
-            civHeroBlueprints[playerCiv]
+            civHeroBlueprints[playerCiv],
+            {
+                targetingType: TargetingType.Targeting_None,
+            }
         )
 
         Entity_SetInvulnerable(heroEntity, true, 0)
@@ -86,10 +89,79 @@ function createHeroes(components: RoundsSystemInputs) {
     }
 }
 
-export const roundsSystem: System<RoundsSystemInputs> = (components: RoundsSystemInputs) => {
+function prepareNextRound(components: RoundsSystemInputs) {
     const { rounds } = components
 
-    // Kill heroes that are out of bounds
+    rounds.state = "waiting"
+
+    print(`Waiting ${rounds.timeBetweenRounds} seconds for next round`)
+
+    print("Respawning heroes")
+    createHeroes(components)
+
+    rounds.currentTask = createTask({
+        callback: () => {
+            rounds.state = "inProgress"
+            rounds.currentRound++
+            print(`Starting round ${rounds.currentRound}`)
+
+            if (rounds.currentRound < rounds.rounds.length) {
+                rounds.currentRoundRunProps = { stopped: false }
+                startRound(components)
+                    .then(() => {
+                        rounds.state = "finished"
+                        Sound_Play2D(sfxs.roundVictory)
+                        showNotification(`Completed round ${rounds.currentRound + 1}`)
+                    })
+                    .catch(reason => print(`Round stopped, reason: ${reason}`))
+            } else {
+                print("Game over!")
+                showNotification("Completed all rounds, the game is over")
+            }
+        },
+        interval: rounds.timeBetweenRounds,
+    })
+}
+
+function restartGame(components: RoundsSystemInputs) {
+    const { rounds, aoeEntities, lifetimes } = components
+
+    print("All heroes are dead, restarting...")
+
+    Sound_Play2D(sfxs.roundFailure)
+    showNotification(`Failed on round ${rounds.currentRound + 1}, restarting from round 1...`)
+
+    for (const entityId in aoeEntities) {
+        lifetimes[entityId] = {
+            remainingTime: 0
+        }
+    }
+
+    if (rounds.currentTask) {
+        stopTask(rounds.currentTask)
+    }
+
+    if (rounds.currentRoundRunProps) {
+        rounds.currentRoundRunProps.stopped = true
+        rounds.currentRoundRunProps = undefined
+    }
+
+    rounds.state = "waiting"
+
+    rounds.currentTask = createTask({
+        callback: () => {
+            print("Put back into init")
+            rounds.currentTask = undefined
+            rounds.currentRound = -1
+            rounds.state = "init"
+        },
+        interval: rounds.timeBetweenRounds,
+    })
+}
+
+function killOutOfBoundsHeroes(components: RoundsSystemInputs) {
+    const { rounds } = components
+
     for (const [entityId, aoeEntity] of Object.entries(components.aoeEntities)) {
         const [x, y] = components.transforms[entityId].position
         if (aoeEntity.syncMode === "slave") {
@@ -102,79 +174,27 @@ export const roundsSystem: System<RoundsSystemInputs> = (components: RoundsSyste
             }
         }
     }
+}
+
+export const roundsSystem: System<RoundsSystemInputs> = (components: RoundsSystemInputs) => {
+    const { rounds, aoeEntities } = components
+
+    killOutOfBoundsHeroes(components)
 
     if (rounds.state === "waiting") {
         return
     }
 
     if (rounds.state === "finished") {
-        rounds.state = "waiting"
-
-        print(`Waiting ${rounds.timeBetweenRounds} seconds for next round`)
-
-        createHeroes(components)
-
-        rounds.currentTask = createTask({
-            callback: () => {
-                rounds.state = "inProgress"
-                rounds.currentRound++
-                print(`Starting round ${rounds.currentRound}`)
-
-                print("Respawning heroes")
-
-                if (rounds.currentRound < rounds.rounds.length) {
-                    rounds.currentRoundRunProps = { stopped: false }
-                    startRound(components)
-                        .then(() => {
-                            components.rounds.state = "finished"
-                            Sound_Play2D(sfxs.roundVictory)
-                            UI_CreateEventCue(LOC(`Completed round ${components.rounds.currentRound + 1}`), undefined, "", "", "sfx_ui_event_queue_high_priority_play")
-                        })
-                        .catch(reason => print(`Round stopped, reason: ${reason}`))
-                } else {
-                    print("Game over!")
-                    UI_CreateEventCue(LOC(`Completed all rounds, the game is over`), undefined, "", "", "sfx_ui_event_queue_high_priority_play")
-                }
-            },
-            interval: rounds.timeBetweenRounds,
-        })
+        prepareNextRound(components)
     } else if (rounds.state === "init") {
         createHeroes(components)
         rounds.state = "finished"
     }
 
     // Restart game if no heroes alive
-    if (Object.values(components.aoeEntities).filter(aoeEntity => aoeEntity.syncMode === "slave").length === 0) {
-        print("All heroes are dead, restarting...")
-
-        Sound_Play2D(sfxs.roundFailure)
-        UI_CreateEventCue(LOC(`Failed on round ${components.rounds.currentRound + 1}, restarting from round 1...`), undefined, "", "", "sfx_ui_event_queue_high_priority_play")
-
-        for (const entityId in components.aoeEntities) {
-            components.lifetimes[entityId] = {
-                remainingTime: 0
-            }
-        }
-
-        if (rounds.currentTask) {
-            stopTask(rounds.currentTask)
-        }
-
-        if (rounds.currentRoundRunProps) {
-            rounds.currentRoundRunProps.stopped = true
-            rounds.currentRoundRunProps = undefined
-        }
-
-        rounds.state = "waiting"
-
-        rounds.currentTask = createTask({
-            callback: () => {
-                print("Put back into init")
-                rounds.currentTask = undefined
-                rounds.currentRound = -1
-                rounds.state = "init"
-            },
-            interval: rounds.timeBetweenRounds,
-        })
+    const anyHeroesAlive = Object.values(aoeEntities).filter(aoeEntity => aoeEntity.syncMode === "slave").length === 0
+    if (anyHeroesAlive) {
+        restartGame(components)
     }
 }

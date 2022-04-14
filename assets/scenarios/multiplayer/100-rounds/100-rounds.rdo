@@ -6,6 +6,32 @@
 			<DataValue Name="SquadPrecacheItem">5549727620328709019</DataValue>
 			<DataValue Name="SquadPrecacheItem">2625228038557863858</DataValue>
 			<DataValue Name="SquadPrecacheItem">10413731367032676629</DataValue>
+			<DataValue Name="SquadPrecacheItem">852080215288221647</DataValue>
+			<DataValue Name="SquadPrecacheItem">2570404741871357244</DataValue>
+			<!--PrecacheList/SquadPrecacheItem/-->
+			<DataObject Name="" Type="SquadPrecacheItem" Id="852080215288221647" OwnerId="10064708660572816447">
+				<DataProperty Name="#BaseTypes" Type="String" Value="IPrecacheItem#0|"/>
+				<DataProperty Name="m_blueprint" Type="Object">
+					<DataValue Name="ReflectPBG_SquadProperties">18005474980904748263</DataValue>
+					<!--PrecacheList/SquadPrecacheItem/ReflectPBG_SquadProperties/-->
+					<DataObject Name="" Type="ReflectPBG_SquadProperties" Id="18005474980904748263" OwnerId="852080215288221647">
+						<DataProperty Name="#BaseTypes" Type="String" Value="PropertyBagGroupReflectReference#0|Provider_PropertyBagGroup#0|"/>
+						<DataProperty Name="m_fileName" Type="String" Value="unit_manatarms_4_eng"/>
+					</DataObject>
+				</DataProperty>
+			</DataObject>
+			<!--PrecacheList/SquadPrecacheItem/-->
+			<DataObject Name="" Type="SquadPrecacheItem" Id="2570404741871357244" OwnerId="10064708660572816447">
+				<DataProperty Name="#BaseTypes" Type="String" Value="IPrecacheItem#0|"/>
+				<DataProperty Name="m_blueprint" Type="Object">
+					<DataValue Name="ReflectPBG_SquadProperties">17079662154541882318</DataValue>
+					<!--PrecacheList/SquadPrecacheItem/ReflectPBG_SquadProperties/-->
+					<DataObject Name="" Type="ReflectPBG_SquadProperties" Id="17079662154541882318" OwnerId="2570404741871357244">
+						<DataProperty Name="#BaseTypes" Type="String" Value="PropertyBagGroupReflectReference#0|Provider_PropertyBagGroup#0|"/>
+						<DataProperty Name="m_fileName" Type="String" Value="unit_mangonel_3_eng"/>
+					</DataObject>
+				</DataProperty>
+			</DataObject>
 			<!--PrecacheList/SquadPrecacheItem/-->
 			<DataObject Name="" Type="SquadPrecacheItem" Id="2625228038557863858" OwnerId="10064708660572816447">
 				<DataProperty Name="#BaseTypes" Type="String" Value="IPrecacheItem#0|"/>

@@ -21,6 +21,6 @@
         "luaBundleEntry": "scripts/main.ts"
     },
     "include": [
-        "scripts/**/*.ts",
+        "scripts/**/*.ts"
     ]
 }

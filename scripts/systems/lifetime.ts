@@ -2,7 +2,7 @@ import { EntityComponents, SingletonComponent } from "../ecs/components"
 import { System } from "../ecs/systems"
 import { LifetimeComponent } from "../components/lifetime"
 import { GameStateComponent } from "../components/gamestate"
-import { RigidBodyComponent } from "../components/rigidbody"
+import { ProjectileComponent } from "../components/projectile"
 import { TransformComponent } from "../components/transform"
 import { PlayerOwnedComponent } from "../components/playerowned"
 import { CollisionComponent } from "../components/collision"
@@ -12,7 +12,7 @@ import { CollisionActionComponent } from "../components/collisionaction"
 import { PingPongComponent } from "../components/pingpong"
 
 export type LifetimeSystemInputs = {
-    rigidBodies: EntityComponents<RigidBodyComponent>
+    projectiles: EntityComponents<ProjectileComponent>
     transforms: EntityComponents<TransformComponent>
     lifetimes: EntityComponents<LifetimeComponent>
     playerOwneds: EntityComponents<PlayerOwnedComponent>
@@ -31,7 +31,7 @@ export const lifetimeSystem: System<LifetimeSystemInputs> = (components: Lifetim
         components.collisions,
         components.lifetimes,
         components.playerOwneds,
-        components.rigidBodies,
+        components.projectiles,
         components.transforms,
         components.aoeEntities,
         components.healths,

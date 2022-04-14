@@ -8,6 +8,7 @@ export function getSquadGroupEntity(squadGroup: SGroupID) {
 
 export type SpawnEntityOptions = {
     unselectable?: boolean
+    targetingType?: TargetingType
 }
 
 let nextEntityId = 0
@@ -21,6 +22,10 @@ export function spawnEntity(playerOwner: Player, position: Position, pbg: string
 
     if (options?.unselectable) {
         SGroup_SetSelectable(squadGroup, false)
+    }
+
+    if (options?.targetingType !== undefined) {
+        SGroup_SetTargetingType(squadGroup, options.targetingType)
     }
 
     return getSquadGroupEntity(squadGroup)
@@ -70,4 +75,8 @@ export function copyPositionToVector3(vector: Vector3, position: Position) {
 export function randomInt(prng: PRng, min: number, max: number) {
     const range = (max - min) + 1
     return (prng.get_random_32() % range) + min
+}
+
+export function showNotification(message: string) {
+    UI_CreateEventCue(message, undefined, "", "", "sfx_ui_event_queue_high_priority_play")
 }

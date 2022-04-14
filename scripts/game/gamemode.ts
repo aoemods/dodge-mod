@@ -3,7 +3,7 @@ import { CollisionComponent, CollisionResultsComponent } from "../components/col
 import { GameStateComponent } from "../components/gamestate"
 import { LifetimeComponent } from "../components/lifetime"
 import { PlayerOwnedComponent } from "../components/playerowned"
-import { RigidBodyComponent } from "../components/rigidbody"
+import { ProjectileComponent } from "../components/projectile"
 import { PingPongComponent } from "../components/pingpong"
 import { HealthComponent } from "../components/health"
 import { TransformComponent } from "../components/transform"
@@ -13,7 +13,7 @@ import { collisionSystem } from "../systems/collision"
 import { collisionActionSystem } from "../systems/collisionaction"
 import { entitySyncSystemPre, entitySyncSystemPost } from "../systems/entitysync"
 import { lifetimeSystem } from "../systems/lifetime"
-import { physicsSystem } from "../systems/physics"
+import { projectileSystem } from "../systems/projectile"
 import { pingPongSystem } from "../systems/pingpong"
 import { CollisionActionComponent } from "../components/collisionaction"
 import { createTask } from "../core/tasks"
@@ -35,7 +35,7 @@ type GameComponent = {
     rounds: SingletonComponent<RoundsComponent>
     userInterface: SingletonComponent<UserInterfaceComponent>
     pingPongs: EntityComponents<PingPongComponent>
-    rigidBodies: EntityComponents<RigidBodyComponent>
+    projectiles: EntityComponents<ProjectileComponent>
     transforms: EntityComponents<TransformComponent>
     lifetimes: EntityComponents<LifetimeComponent>
     playerOwneds: EntityComponents<PlayerOwnedComponent>
@@ -51,7 +51,7 @@ type GameSystemInputs = GameComponent
 const gameSystem: System<GameSystemInputs> = (components: GameSystemInputs) => {
     entitySyncSystemPre(components)
     pingPongSystem(components)
-    physicsSystem(components)
+    projectileSystem(components)
     collisionSystem(components)
     collisionActionSystem(components)
     lifetimeSystem(components)
@@ -81,7 +81,7 @@ export class GameModeRounds implements GameMode {
         lifetimes: {},
         playerOwneds: {},
         pingPongs: {},
-        rigidBodies: {},
+        projectiles: {},
         transforms: {},
         aoeEntities: {},
         players: {},
