@@ -10,6 +10,7 @@ import { AoeEntityComponent } from "../components/aoeentity"
 import { HealthComponent } from "../components/health"
 import { CollisionActionComponent } from "../components/collisionaction"
 import { PingPongComponent } from "../components/pingpong"
+import { isEntityValidAndAlive } from "../core/util"
 
 export type LifetimeSystemInputs = {
     projectiles: EntityComponents<ProjectileComponent>
@@ -45,7 +46,10 @@ export const lifetimeSystem: System<LifetimeSystemInputs> = (components: Lifetim
         if (lifetimeComp.remainingTime !== undefined) {
             if (lifetimeComp.remainingTime <= 0) {
                 if (entityId in components.aoeEntities) {
-                    Entity_Kill(components.aoeEntities[entityId].entityId)
+                    const aoeEntity = components.aoeEntities[entityId]
+                    if (isEntityValidAndAlive(aoeEntity.entityId)) {
+                        Entity_Kill(components.aoeEntities[entityId].entityId)
+                    }
                 }
 
                 for (const comps of allComponents) {

@@ -2,17 +2,37 @@ import { TransformComponent } from "../components/transform"
 import { EntityComponents } from "../ecs/components"
 import { System } from "../ecs/systems"
 import { AoeEntityComponent, EntitySyncProperty } from "../components/aoeentity"
-import { vector3ToPosition, vector2ToPosition, copyPositionToVector3, copyPositionToVector2 } from "../core/util"
+import { vector3ToPosition, vector2ToPosition, copyPositionToVector3, copyPositionToVector2, isEntityValidAndAlive } from "../core/util"
+import { LifetimeComponent } from "../components/lifetime"
 
 export type EntitySyncSystemInputs = {
     aoeEntities: EntityComponents<AoeEntityComponent>
     transforms: EntityComponents<TransformComponent>
+    lifetimes: EntityComponents<LifetimeComponent>
+}
+
+function expireIfNotAlive(entityId: string, components: EntitySyncSystemInputs) {
+    const aoeEntity = components.aoeEntities[entityId]
+
+    if (!isEntityValidAndAlive(aoeEntity.entityId)) {
+        components.lifetimes[entityId] = {
+            remainingTime: 0
+        }
+
+        return true
+    }
+
+    return false
 }
 
 export const entitySyncSystemPre: System<EntitySyncSystemInputs> = (components: EntitySyncSystemInputs) => {
     const { aoeEntities, transforms } = components
 
     for (const [entityId, aoeEntity] of Object.entries(aoeEntities)) {
+        if (expireIfNotAlive(entityId, components)) {
+            continue
+        }
+
         const transformComponent = transforms[entityId]
 
         const syncPosition = !aoeEntity.syncProperties || (aoeEntity.syncProperties & EntitySyncProperty.Position) === EntitySyncProperty.Position
@@ -38,6 +58,10 @@ export const entitySyncSystemPost: System<EntitySyncSystemInputs> = (components:
     const { aoeEntities, transforms } = components
 
     for (const [entityId, aoeEntity] of Object.entries(aoeEntities)) {
+        if (expireIfNotAlive(entityId, components)) {
+            continue
+        }
+
         const transformComponent = transforms[entityId]
 
         const syncPosition = !aoeEntity.syncProperties || (aoeEntity.syncProperties & EntitySyncProperty.Position) === EntitySyncProperty.Position

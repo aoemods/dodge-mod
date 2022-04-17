@@ -1,18 +1,20 @@
 import { Vector2 } from "./vector2"
+import * as v2 from "./vector2"
 import { Vector3 } from "./vector3"
 import { PRng } from "./prng"
 
-export function getSquadGroupEntity(squadGroup: SGroupID) {
+export function getSquadGroupEntity(squadGroup: SGroupID): EntityID {
     return Squad_EntityAt(SGroup_GetSpawnedSquadAt(squadGroup, 1), 0)
 }
 
 export type SpawnEntityOptions = {
     unselectable?: boolean
     targetingType?: TargetingType
+    invulnerable?: boolean
 }
 
 let nextEntityId = 0
-export function spawnEntity(playerOwner: Player, position: Position, pbg: string, options?: SpawnEntityOptions) {
+export function spawnSquadGroup(playerOwner: Player, position: Position, pbg: string, options?: SpawnEntityOptions): SGroupID {
     let dummySquadBlueprint: SquadBlueprint = BP_GetSquadBlueprint(pbg)
 
     const squadGroup = SGroup_CreateIfNotFound(`sg_${nextEntityId++}`)
@@ -22,13 +24,40 @@ export function spawnEntity(playerOwner: Player, position: Position, pbg: string
 
     if (options?.unselectable) {
         SGroup_SetSelectable(squadGroup, false)
+        Entity_SetExtEnabled(getSquadGroupEntity(squadGroup), EXTID_MovementBlocker, false)
+        Entity_SetExtEnabled(getSquadGroupEntity(squadGroup), EXTID_Moving, false)
     }
 
     if (options?.targetingType !== undefined) {
         SGroup_SetTargetingType(squadGroup, options.targetingType)
     }
 
-    return getSquadGroupEntity(squadGroup)
+    if (options?.invulnerable !== false) {
+        SGroup_SetInvulnerable(squadGroup, true)
+    }
+
+
+    return squadGroup
+}
+
+export function spawnEntity(playerOwner: Player, position: Position, pbg: string, options?: SpawnEntityOptions): EntityID {
+    return getSquadGroupEntity(spawnSquadGroup(playerOwner, position, pbg, options))
+}
+
+export function makeVerticalLine(center: Vector2, offset: Vector2, count: number): Vector2[] {
+    const positions: Vector2[] = []
+
+    const startIndex = -Math.floor(count / 2) // eg. 2: -1, 0; 3: -1, 0, 1
+    for (let i = startIndex; i < startIndex + count; i++) {
+        positions.push(v2.add(center, v2.scale(offset, i)))
+    }
+
+    return positions
+}
+
+export function makeHorizontalLine(center: Vector2, offset: Vector2, count: number): Vector2[] {
+    const sideward: Vector2 = [-offset[1], offset[0]]
+    return makeVerticalLine(center, sideward, count)
 }
 
 export function vector2ToPosition(v: Vector2, height?: number): Position {
@@ -79,4 +108,8 @@ export function randomInt(prng: PRng, min: number, max: number) {
 
 export function showNotification(message: string) {
     UI_CreateEventCue(message, undefined, "", "", "sfx_ui_event_queue_high_priority_play")
+}
+
+export function isEntityValidAndAlive(entityId: EntityID) {
+    return Entity_IsValid(entityId.EntityID) && Entity_IsAlive(entityId)
 }

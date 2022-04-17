@@ -15,6 +15,7 @@ g.Mission_Start = () => {
     for (const [k, v] of Object.entries(gameMode.components)) {
         print(`## ${k}: ${v}`)
     }
+
     gameMode.onInit()
 }
 
