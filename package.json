@@ -4,7 +4,8 @@
         "start": "tstl && node deploy.js",
         "dev": "tstl && run-p dev:*",
         "dev:tstl": "tstl --watch",
-        "dev:deploy": "watch --interval 0.5 \"node deploy.js\" ./scripts-generated"
+        "dev:deploy": "watch --interval 0.5 \"node deploy.js\" ./scripts-generated",
+        "tstl": "tstl"
     },
     "devDependencies": {
         "@aoemods/aoetypes": "0.1.12",
