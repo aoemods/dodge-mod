@@ -8,6 +8,7 @@
 			<DataValue Name="SquadPrecacheItem">10413731367032676629</DataValue>
 			<DataValue Name="SquadPrecacheItem">852080215288221647</DataValue>
 			<DataValue Name="SquadPrecacheItem">2570404741871357244</DataValue>
+			<DataValue Name="SquadPrecacheItem">7477338110618651808</DataValue>
 			<!--PrecacheList/SquadPrecacheItem/-->
 			<DataObject Name="" Type="SquadPrecacheItem" Id="852080215288221647" OwnerId="10064708660572816447">
 				<DataProperty Name="#BaseTypes" Type="String" Value="IPrecacheItem#0|"/>
@@ -53,6 +54,18 @@
 					<DataObject Name="" Type="ReflectPBG_SquadProperties" Id="621983069208836169" OwnerId="5549727620328709019">
 						<DataProperty Name="#BaseTypes" Type="String" Value="PropertyBagGroupReflectReference#0|Provider_PropertyBagGroup#0|"/>
 						<DataProperty Name="m_fileName" Type="String" Value="gaia_huntable_boar"/>
+					</DataObject>
+				</DataProperty>
+			</DataObject>
+			<!--PrecacheList/SquadPrecacheItem/-->
+			<DataObject Name="" Type="SquadPrecacheItem" Id="7477338110618651808" OwnerId="10064708660572816447">
+				<DataProperty Name="#BaseTypes" Type="String" Value="IPrecacheItem#0|"/>
+				<DataProperty Name="m_blueprint" Type="Object">
+					<DataValue Name="ReflectPBG_SquadProperties">202575607872069226</DataValue>
+					<!--PrecacheList/SquadPrecacheItem/ReflectPBG_SquadProperties/-->
+					<DataObject Name="" Type="ReflectPBG_SquadProperties" Id="202575607872069226" OwnerId="7477338110618651808">
+						<DataProperty Name="#BaseTypes" Type="String" Value="PropertyBagGroupReflectReference#0|Provider_PropertyBagGroup#0|"/>
+						<DataProperty Name="m_fileName" Type="String" Value="unit_horseman_4_eng"/>
 					</DataObject>
 				</DataProperty>
 			</DataObject>

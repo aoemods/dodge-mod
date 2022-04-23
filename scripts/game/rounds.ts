@@ -3,6 +3,7 @@ import { pbgs } from "../constants"
 import { PRng } from "../core/prng"
 import { makeHorizontalLine, makeVerticalLine, randomInt } from "../core/util"
 import { Vector2 } from "../core/vector2"
+import * as v2 from "../core/vector2"
 import { newEntityId } from "../ecs/entity"
 import { RoundsSystemInputs } from "../systems/rounds"
 import {
@@ -208,8 +209,6 @@ export async function round10(roundInputs: RoundInputs) {
 
     let done = false
 
-    const bossEntityId = newEntityId()
-
     async function spawnExtraSheep() {
         const prng = PRng.new(888810)
         let extraSheepCount = 1
@@ -229,6 +228,14 @@ export async function round10(roundInputs: RoundInputs) {
             extraSheepCount++
             spawnDelay = Math.max(spawnDelay - 0.1, 1)
         }
+    }
+
+    const bossEntityId = newEntityId()
+    components.pingPongs[bossEntityId] = {
+        speed: 2,
+        goingTo: "a",
+        positionA: [25, -12],
+        positionB: [25, 12],
     }
 
     async function spawnBossSheep() {
@@ -728,6 +735,125 @@ export async function round19(roundInputs: RoundInputs) {
     await Promise.all([advanceIteration(), spawnMangonels(), spawnSheep()])
 }
 
+export async function round20(roundInputs: RoundInputs) {
+    const { wait, sheep, mangonel, wolf, boss, components } = roundInputs
+
+    const bossEntityId = newEntityId()
+
+    let done = false
+
+    async function spawnExtraSheep() {
+        const prng = PRng.new(888820)
+        let extraSheepCount = 1
+        let spawnDelay = 1.8
+        while (!done) {
+            for (let i = 0; i < 20; i++) {
+                for (let j = 0; j < extraSheepCount; j++) {
+                    sheep([randomInt(prng, -12, 12), 25], directionNormalNy)
+                }
+                await wait(spawnDelay)
+
+                if (done) {
+                    break
+                }
+            }
+
+            extraSheepCount++
+            spawnDelay = Math.max(spawnDelay - 0.1, 1)
+        }
+    }
+
+    async function spawnExtraMangonels() {
+        const prng = PRng.new(333320)
+        while (!done) {
+            const directionNumber = randomInt(prng, 0, 3)
+            const targetPosition: Vector2 = [randomInt(prng, -12, 12), randomInt(prng, -12, 12)]
+            const position = randomPositionForDirection(prng, directionNumber)
+            mangonel(position, targetPosition)
+
+            await wait(randomInt(prng, 3, 10))
+        }
+    }
+
+    async function spawnBossSheep() {
+        const prng = PRng.new(777720)
+        let nextWolf = 3
+        while (!done) {
+            if (bossEntityId in components.transforms) {
+                const bossPosition = components.transforms[bossEntityId].position
+                const bossDirection = components.transforms[bossEntityId].heading
+
+                // Shoot normal to the boss direction
+                const direction: Vector2 = [-bossDirection[2], bossDirection[0]]
+                if (randomInt(prng, 0, 1) === 0) {
+                    v2.scaleInline(direction, -1)
+                }
+
+                let spawnedEntityId: number
+                if (nextWolf <= 0) {
+                    spawnedEntityId = wolf(bossPosition, direction)
+                    nextWolf = randomInt(prng, 3, 6)
+                } else {
+                    spawnedEntityId = sheep(bossPosition, direction)
+                    nextWolf--
+                }
+
+                v2.scaleInline(components.projectiles[spawnedEntityId].velocity, 0.5)
+            }
+
+            await wait(1)
+        }
+    }
+
+    async function moveBoss() {
+        await wait(2)
+
+        components.projectiles[bossEntityId] = {
+            velocity: [0, 0],
+        }
+
+        components.collisions[bossEntityId] = {
+            radius: 1,
+        }
+
+        components.collisionActions[bossEntityId] = {
+            actions: [{
+                type: "killPlayer",
+            }]
+        }
+
+        const prng = PRng.new(111120)
+        while (!done) {
+            // Choose random direction, teleport the boss to the start and make it
+            // walk to the other end.
+            const directionNumber = randomInt(prng, 0, 3)
+            const direction = directions[directionNumber]
+            const position = directionCenters[directionNumber]
+
+            const distance = 2 * v2.length(position)
+            const speed = 6
+            const walkTime = distance / speed
+
+            components.transforms[bossEntityId].position[0] = position[0]
+            components.transforms[bossEntityId].position[1] = position[1]
+
+            components.transforms[bossEntityId].heading[0] = direction[0]
+            components.transforms[bossEntityId].heading[2] = direction[1]
+
+            components.projectiles[bossEntityId].velocity = v2.scale(direction, speed)
+
+            await wait(walkTime)
+        }
+    }
+
+    spawnBossSheep()
+    spawnExtraSheep()
+    spawnExtraMangonels()
+    moveBoss()
+    await boss(bossEntityId, pbgs.horseMan.english)
+    done = true
+}
+
 export async function round21(roundInputs: RoundInputs) {
     const { wait, sheep, deer } = roundInputs
 
@@ -887,8 +1013,8 @@ export function getRounds(): Round[] {
         round17,
         round18,
         round19,
+        round20,
 
-        //round20,
         round21,
         round22,
         round23,

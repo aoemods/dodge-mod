@@ -23,6 +23,16 @@ export const pbgs = {
         sultanate: "unit_manatarms_4_sul",
         abbasid: "unit_manatarms_4_abb",
     },
+    horseMan: {
+        english: "unit_horseman_4_eng",
+        chinese: "unit_horseman_4_chi",
+        french: "unit_horseman_4_fre",
+        hre: "unit_horseman_4_hre",
+        mongol: "unit_horseman_4_mon",
+        rus: "unit_horseman_4_rus",
+        sultanate: "unit_horseman_4_sul",
+        abbasid: "unit_horseman_4_abb",
+    },
     mangonel: {
         english: "unit_mangonel_3_eng",
         chinese: "unit_mangonel_3_chi",

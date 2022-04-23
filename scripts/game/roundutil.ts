@@ -76,7 +76,7 @@ export type ProjectileTypeData = {
 export const projectileTypeData: Record<ProjectileType, ProjectileTypeData> = {
     [ProjectileType.Sheep]: { pbg: pbgs.sheep, speed: 4, radius: 0.6 },
     [ProjectileType.Deer]: { pbg: pbgs.deer, speed: 6, radius: 0.6 },
-    [ProjectileType.Wolf]: { pbg: pbgs.wolf, speed: 4, radius: 0.6 },
+    [ProjectileType.Wolf]: { pbg: pbgs.wolf, speed: 4, radius: 0.8 },
     [ProjectileType.Boar]: { pbg: pbgs.boar, speed: 4, fade: true, radius: 0.8 },
 }
 
@@ -236,13 +236,6 @@ export function useRoundInputs(props: RoundRunProps, components: RoundsSystemInp
             syncMode: "master",
         }
 
-        components.pingPongs[bossEntityId] = {
-            speed: 2,
-            goingTo: "a",
-            positionA: [25, -12],
-            positionB: [25, 12],
-        }
-
         components.playerOwneds[bossEntityId] = {
             owningPlayerId: playerEntityId,
         }
@@ -256,7 +249,7 @@ export function useRoundInputs(props: RoundRunProps, components: RoundsSystemInp
             current: 5,
         }
 
-        showNotification("Boss spawned, run into wolves to kill it!")
+        showNotification("Boss spawned, run into wolves coming out of it to kill it!")
 
         while (bossEntityId in components.healths && components.healths[bossEntityId].current > 0) {
             print(`Boss hp: ${components.healths[bossEntityId].current}`)
