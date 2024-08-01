@@ -4,7 +4,10 @@ import { Vector3 } from "./vector3"
 import { PRng } from "./prng"
 
 export function getSquadGroupEntity(squadGroup: SGroupID): EntityID {
-    return Squad_EntityAt(SGroup_GetSpawnedSquadAt(squadGroup, 1), 0)
+    const sq = SGroup_GetSpawnedSquadAt(squadGroup, 1)
+    // const et = Squad_EntityAt(sg, 0)
+    const entity = Squad_GetFirstEntity(sq)
+    return entity
 }
 
 export type SpawnEntityOptions = {
@@ -14,13 +17,35 @@ export type SpawnEntityOptions = {
 }
 
 let nextEntityId = 0
-export function spawnSquadGroup(playerOwner: Player, position: Position, pbg: string, options?: SpawnEntityOptions): SGroupID {
+/**
+ * Spawn a SquadGroup
+ * @param playerOwner 
+ * @param position 
+ * @param pbg should be sbp
+ * @param options 
+ * @returns SGROUPID
+ */
+export function spawnSquadGroup(
+    playerOwner: Player,
+    position: Position,
+    pbg: string,
+    options?: SpawnEntityOptions
+): SGroupID {
+    // @bug 报错
     let dummySquadBlueprint: SquadBlueprint = BP_GetSquadBlueprint(pbg)
 
     const squadGroup = SGroup_CreateIfNotFound(`sg_${nextEntityId++}`)
-    UnitEntry_DeploySquads(playerOwner.id, squadGroup, [{
-        sbp: dummySquadBlueprint, numSquads: 1
-    }], position)
+    UnitEntry_DeploySquads(
+        playerOwner.id,
+        squadGroup,
+        [
+            {
+                sbp: dummySquadBlueprint,
+                num_squads: 1,
+            },
+        ],
+        position
+    )
 
     if (options?.unselectable) {
         SGroup_SetSelectable(squadGroup, false)
@@ -36,11 +61,15 @@ export function spawnSquadGroup(playerOwner: Player, position: Position, pbg: st
         SGroup_SetInvulnerable(squadGroup, true)
     }
 
-
     return squadGroup
 }
 
-export function spawnEntity(playerOwner: Player, position: Position, pbg: string, options?: SpawnEntityOptions): EntityID {
+export function spawnEntity(
+    playerOwner: Player,
+    position: Position,
+    pbg: string,
+    options?: SpawnEntityOptions
+): EntityID {
     return getSquadGroupEntity(spawnSquadGroup(playerOwner, position, pbg, options))
 }
 
@@ -102,7 +131,7 @@ export function copyPositionToVector3(vector: Vector3, position: Position) {
  * @returns Random integer between min (inclusive) and max (inclusive).
  */
 export function randomInt(prng: PRng, min: number, max: number) {
-    const range = (max - min) + 1
+    const range = max - min + 1
     return (prng.get_random_32() % range) + min
 }
 

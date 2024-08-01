@@ -12,6 +12,13 @@ export const pbgs = {
         rus: "unit_spearman_4_rus",
         sultanate: "unit_spearman_4_sul",
         abbasid: "unit_spearman_4_abb",
+
+        abbasid_ha_01: "unit_spearman_4_abb_ha_01",
+        chinese_ha_01: "unit_spearman_4_chi_ha_01",
+        french_ha_01: "unit_spearman_4_fre_ha_01",
+        hre_ha_01: "unit_spearman_4_hre_ha_01",
+        japanese: "unit_spearman_4_jpn",
+        byzantine: "unit_spearman_4_byz",
     },
     manAtArms: {
         english: "unit_manatarms_4_eng",
@@ -22,6 +29,13 @@ export const pbgs = {
         rus: "unit_manatarms_4_rus",
         sultanate: "unit_manatarms_4_sul",
         abbasid: "unit_manatarms_4_abb",
+
+        abbasid_ha_01: "unit_manatarms_4_abb_ha_01",
+        chinese_ha_01: "unit_manatarms_4_chi_ha_01",
+        french_ha_01: "unit_manatarms_4_fre_ha_01",
+        hre_ha_01: "unit_manatarms_4_hre_ha_01",
+        japanese: "unit_manatarms_4_jpn",
+        byzantine: "unit_manatarms_4_byz",
     },
     horseMan: {
         english: "unit_horseman_4_eng",
@@ -32,6 +46,13 @@ export const pbgs = {
         rus: "unit_horseman_4_rus",
         sultanate: "unit_horseman_4_sul",
         abbasid: "unit_horseman_4_abb",
+
+        abbasid_ha_01: "unit_horseman_4_abb_ha_01",
+        chinese_ha_01: "unit_horseman_4_chi_ha_01",
+        french_ha_01: "unit_horseman_4_fre_ha_01",
+        hre_ha_01: "unit_horseman_4_hre_ha_01",
+        japanese: "unit_horseman_4_jpn",
+        byzantine: "unit_horseman_4_byz",
     },
     mangonel: {
         english: "unit_mangonel_3_eng",
@@ -42,6 +63,13 @@ export const pbgs = {
         rus: "unit_mangonel_3_rus",
         sultanate: "unit_mangonel_3_sul",
         abbasid: "unit_mangonel_3_abb",
+
+        abbasid_ha_01: "unit_mangonel_3_abb_ha_01",
+        chinese_ha_01: "unit_mangonel_3_chi_ha_01",
+        french_ha_01: "unit_mangonel_3_fre_ha_01",
+        hre_ha_01: "unit_mangonel_3_hre_ha_01",
+        japanese: "unit_mangonel_3_jpn",
+        byzantine: "unit_mangonel_3_byz",
     },
 }
 

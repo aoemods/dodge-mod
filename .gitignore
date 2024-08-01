@@ -137,3 +137,4 @@ assets/scenarios/multiplayer/100-rounds/100-rounds.scar
 .aoe4/
 cache/
 archives/
+prettier.config.js
